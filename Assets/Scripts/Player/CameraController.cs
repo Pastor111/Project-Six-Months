@@ -28,6 +28,7 @@ public class CameraController : MonoBehaviour
     [Space]
     [Space]
     [Header("Transforms")]
+    public Transform CameraParent;
     public Transform PlayerBody;
     public Transform CameraHead;
     public Transform CameraFollow;
@@ -41,10 +42,21 @@ public class CameraController : MonoBehaviour
     [Space]
     [Header("Game Feel")]
     public HeadBobSettings headBobSettings;
+    public HeadBobSettings Run_headBobSettings;
     public float MinFov;
     public float MaxFov;
     public float FOVSpeed;
+    [Space]
+    [Header("Weapon Sway")]
+    public Transform ApplySway;
+    public float SwayThreshold = 5;
+    public float SwayLerp = 5;
+    public Vector3 SwayLeft = new Vector3(0, 0.1f, 0);
+    public Vector3 SwayRight = new Vector3(0, -0.1f, 0);
 
+    public Vector3 SwayUp = new Vector3(0, 0.1f, 0);
+    public Vector3 SwayDown = new Vector3(0, -0.1f, 0);
+    public Vector3 SwayNormal;
 
     #region Private
     private Vector3 extraOffset;
@@ -88,11 +100,11 @@ public class CameraController : MonoBehaviour
         //extraOffset = Vector3.MoveTowards(extraOffset, Vector3.zero, CameraOffsetSpeed * Time.deltaTime);
         //transform.parent.position = Vector3.MoveTowards(transform.parent.position, CameraHead.position + extraOffset, HeadBoobSmooth * Time.deltaTime);
 
-        transform.parent.position = CameraHead.transform.position + extraOffset;
+        CameraParent.position = CameraHead.transform.position + extraOffset;
 
-        if ((transform.parent.position - CameraHead.position).magnitude <= 0.001f)
+        if ((CameraParent.position - CameraHead.position).magnitude <= 0.001f)
         {
-            transform.parent.position = CameraHead.position;
+            CameraParent.position = CameraHead.position;
 
         }
     }
@@ -133,6 +145,37 @@ public class CameraController : MonoBehaviour
         //    transform.localRotation = Quaternion.RotateTowards(transform.localRotation, Quaternion.Euler(transform.localRotation.eulerAngles.x, transform.localRotation.eulerAngles.y, 0), player.TiltSpeed * Time.deltaTime);
 
         PlayerBody.rotation = Quaternion.Euler(0, yRotation, 0);
+
+        Vector3 finalSway = Vector3.zero;
+
+        if(-x >= SwayThreshold)
+        {
+            finalSway += SwayLeft;
+        }
+        else if(-x <= -SwayThreshold)
+        {
+            finalSway += SwayRight;
+        }
+        else
+        {
+            finalSway += SwayNormal;
+        }
+
+        if (-y >= SwayThreshold)
+        {
+            finalSway += SwayDown;
+        }
+        else if (-y <= -SwayThreshold)
+        {
+            finalSway += SwayUp;
+        }
+        else
+        {
+            finalSway += SwayNormal;
+        }
+
+        ApplySway.localRotation = Quaternion.Lerp(ApplySway.localRotation, Quaternion.Euler(finalSway), SwayLerp * Time.deltaTime);
+
         //Orientation.rotation = Quaternion.Euler(0, yRotation, 0);
 
         //UpdateSway();
@@ -140,8 +183,17 @@ public class CameraController : MonoBehaviour
 
     public void HeadBob(float t)
     {
-        extraOffset.x = Mathf.Cos(t * headBobSettings.XBobFrequency) * headBobSettings.XBobAmplitude;
-        extraOffset.y = Mathf.Sin(t * headBobSettings.YBobFrequency) * headBobSettings.YBobAmplitude;
+        if (!player.Running)
+        {
+            extraOffset.x = Mathf.Cos(t * headBobSettings.XBobFrequency) * headBobSettings.XBobAmplitude;
+            extraOffset.y = Mathf.Sin(t * headBobSettings.YBobFrequency) * headBobSettings.YBobAmplitude;
+        }
+        else
+        {
+            extraOffset.x = Mathf.Cos(t * Run_headBobSettings.XBobFrequency) * Run_headBobSettings.XBobAmplitude;
+            extraOffset.y = Mathf.Sin(t * Run_headBobSettings.YBobFrequency) * Run_headBobSettings.YBobAmplitude;
+        }
+
     }
 
     public void Tilt()

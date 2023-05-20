@@ -1,12 +1,85 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 namespace GridPathFinder
 {
-    
-    public class Path
+
+    /// A unility class with functions to scale Texture2D Data.
+    ///
+    /// Scale is performed on the GPU using RTT, so it's blazing fast.
+    /// Setting up and Getting back the texture data is the bottleneck.
+    /// But Scaling itself costs only 1 draw call and 1 RTT State setup!
+    /// WARNING: This script override the RTT Setup! (It sets a RTT!)  
+    ///
+    /// Note: This scaler does NOT support aspect ratio based scaling. You will have to do it yourself!
+    /// It supports Alpha, but you will have to divide by alpha in your shaders,
+    /// because of premultiplied alpha effect. Or you should use blend modes.
+    public class GPUTextureScaler
     {
+        /// <summary>
+        ///     Returns a scaled copy of given texture.
+        /// </summary>
+        /// <param name="tex">Source texure to scale</param>
+        /// <param name="width">Destination texture width</param>
+        /// <param name="height">Destination texture height</param>
+        /// <param name="mode">Filtering mode</param>
+        public static Texture2D Scaled(Texture2D src, int width, int height, FilterMode mode = FilterMode.Trilinear)
+        {
+            Rect texR = new(0, 0, width, height);
+            _gpu_scale(src, width, height, mode);
+
+            //Get rendered data back to a new texture
+            Texture2D result = new(width, height, TextureFormat.ARGB32, true);
+            result.Reinitialize(width, height);
+            result.ReadPixels(texR, 0, 0, true);
+            return result;
+        }
+
+        /// <summary>
+        ///     Scales the texture data of the given texture.
+        /// </summary>
+        /// <param name="tex">Texure to scale</param>
+        /// <param name="width">New width</param>
+        /// <param name="height">New height</param>
+        /// <param name="mode">Filtering mode</param>
+        public static void Scale(Texture2D tex, int width, int height, FilterMode mode = FilterMode.Trilinear)
+        {
+            Rect texR = new(0, 0, width, height);
+            _gpu_scale(tex, width, height, mode);
+
+            // Update new texture
+            tex.Reinitialize(width, height);
+            tex.ReadPixels(texR, 0, 0, true);
+            tex.Apply(true); //Remove this if you hate us applying textures for you :)
+        }
+
+        // Internal unility that renders the source texture into the RTT - the scaling method itself.
+        private static void _gpu_scale(Texture2D src, int width, int height, FilterMode fmode)
+        {
+            //We need the source texture in VRAM because we render with it
+            src.filterMode = fmode;
+            src.Apply(true);
+
+            //Using RTT for best quality and performance. Thanks, Unity 5
+            RenderTexture rtt = new(width, height, 32);
+
+            //Set the RTT in order to render to it
+            Graphics.SetRenderTarget(rtt);
+
+            //Setup 2D matrix in range 0..1, so nobody needs to care about sized
+            GL.LoadPixelMatrix(0, 1, 1, 0);
+
+            //Then clear & draw the texture to fill the entire RTT.
+            GL.Clear(true, true, new Color(0, 0, 0, 0));
+            Graphics.DrawTexture(new Rect(0, 0, 1, 1), src);
+        }
+    }
+
+        public class Path
+        {
         /// <summary>
         /// All The cells IDs that you need to pass to get to your point;
         /// </summary>
@@ -278,35 +351,130 @@ namespace GridPathFinder
 
         }
 
+        public void FillTexture(Texture2D t, Color c)
+        {
+            for (int x = 0; x < t.width; x++)
+            {
+                for (int y = 0; y < t.height; y++)
+                {
+                    t.SetPixel(x, y, c);
+                }
+            }
+        }
+
         public Texture2D mapTexture
         {
             get
             {
-                var t = new Texture2D(Width, Height);
+                var t = new Texture2D(Width * 4 + 1, Height * 4 + 1);
                 t.filterMode = FilterMode.Point;
 
                 int i = 0;
 
-                for (int x = 0; x < Width; x++)
+                FillTexture(t, Color.black);
+
+                for (int x = 2; x < t.width; x += 4)
                 {
-                    for (int y = 0; y < Height; y++)
+                    for (int y = 2; y < t.height; y += 4)
                     {
 
                         if (cells[i].data == 0)
+                        {
+                            t.SetPixel(x + 1, y, Color.white);
+                            t.SetPixel(x - 1, y, Color.white);
+                            t.SetPixel(x, y + 1, Color.white);
+                            t.SetPixel(x, y - 1, Color.white);
                             t.SetPixel(x, y, Color.white);
+                            t.SetPixel(x + 1, y + 1, Color.white);
+                            t.SetPixel(x - 1, y - 1, Color.white);
+                            t.SetPixel(x + 1, y - 1, Color.white);
+                            t.SetPixel(x - 1, y + 1, Color.white);
+                        }
                         else
+                        {
+                            t.SetPixel(x + 1, y, Color.black);
+                            t.SetPixel(x - 1, y, Color.black);
+                            t.SetPixel(x, y + 1, Color.black);
+                            t.SetPixel(x, y - 1, Color.black);
                             t.SetPixel(x, y, Color.black);
+                            t.SetPixel(x + 1, y + 1, Color.black);
+                            t.SetPixel(x - 1, y - 1, Color.black);
+                            t.SetPixel(x + 1, y - 1, Color.black);
+                            t.SetPixel(x - 1, y + 1, Color.black);
+                        }
+
 
                         i++;
 
                     }
                 }
 
+                for (int x = 0; x < t.width; x += 4)
+                {
+                    for (int y = 2; y < t.height; y += 4)
+                    {
+                        if (x == 0 || y == 0)
+                            continue;
+
+                        if((t.GetPixel(x + 1, y) == Color.white || t.GetPixel(x, y + 1) == Color.white) && (t.GetPixel(x - 1, y) == Color.white || t.GetPixel(x, y - 1) == Color.white))
+                        {
+                            t.SetPixel(x, y, Color.gray);
+                        }
+                    }
+                }
+
+                for (int x = 2; x < t.width; x += 4)
+                {
+                    for (int y = 0; y < t.height; y += 4)
+                    {
+                        if (x == 0 || y == 0)
+                            continue;
+
+                        if ((t.GetPixel(x + 1, y) == Color.white || t.GetPixel(x, y + 1) == Color.white) && (t.GetPixel(x - 1, y) == Color.white || t.GetPixel(x, y - 1) == Color.white))
+                        {
+                            t.SetPixel(x, y, Color.gray);
+                        }
+                    }
+                }
+
                 t.Apply();
+
+                System.IO.File.WriteAllBytes(Application.dataPath + "/Level.png", t.EncodeToPNG());
 
                 return t;
             }
         }
+
+        //public Texture2D GetHighQualityImage(int width, int height, int outline)
+        //{
+        //    var t = mapTexture;
+        //    t = GPUTextureScaler.Scaled(t, width, height, FilterMode.Point);
+
+        //    int ratioX = (int)((float)mapTexture.width / (float)width);
+        //    int ratioY = (int)((float)mapTexture.height / (float)height);
+
+        //    for (int x = 0; x < width; x++)
+        //    {
+        //        for (int y = 0; y < height; y++)
+        //        {
+        //            int ogX = x / ratioX;
+        //            int ogY = y / ratioY;
+
+        //            if(ogX >= 1)
+        //            {
+
+        //                if (mapTexture.GetPixel(ogX - 1, ogY) == Color.black && mapTexture.GetPixel(ogX, ogY) == Color.white)
+        //                {
+        //                    //t.SetPixel(x, y, Color.gray);
+        //                }
+        //            }
+
+        //        }
+        //    }
+
+        //    t.Apply();
+        //    return t;
+        //}
 
         public bool CanGoTo(int start, int end, out Path path)
         {
@@ -347,6 +515,7 @@ namespace GridPathFinder
             return false;
 
         }
+
 
         /// <summary>
         /// 
@@ -548,7 +717,13 @@ public class LevelGenerator : MonoBehaviour
     [Space]
     public Vector3 doorSize;
     public Vector3 doorSize2;
-
+    public NavMeshSurface navMesh;
+    public EnemyBehaviour[] AvailableEnemies;
+    public UnityEngine.UI.Image MiniMap;
+    public UnityEngine.UI.Image Player;
+    public Vector2 UIoffset;
+    public float UIScaling;
+    public float SpacingMultiplier;
     public int Spacing;
 
     GameObject levelParent;
@@ -561,12 +736,26 @@ public class LevelGenerator : MonoBehaviour
 
     GridPathFinder.Path path;
 
+    Texture2D myGridTexture;
+
+    //[HideInInspector]
+    public GameObject FirstRoom;
+    [HideInInspector]
+    public GameObject LastRoom;
+
     public static LevelGenerator generator;
     // Start is called before the first frame update
     void Start()
     {
         generator = this;
+        AudioManager.Init();
         GetLevel();
+        myGridTexture = grid.mapTexture;
+        myGridTexture.SetPixel((int)(FirstRoom.transform.position.x / Spacing), (int)(FirstRoom.transform.position.z / Spacing), Color.green);
+        myGridTexture.SetPixel((int)(LastRoom.transform.position.x / Spacing), (int)(LastRoom.transform.position.z / Spacing), Color.red);
+        //myGridTexture.SetPixel((int)(levelParent.transform.transform.position.x / Spacing), (int)(levelParent.transform.GetChild(0).transform.position.z / Spacing), Color.green);
+        myGridTexture.Apply();
+        MiniMap.sprite = Sprite.Create(myGridTexture, new Rect(0, 0, grid.mapTexture.width, grid.mapTexture.height), new Vector2(0, 0));
     }
 
     // Update is called once per frame
@@ -576,6 +765,15 @@ public class LevelGenerator : MonoBehaviour
         {
             GetLevel();
         }
+
+        float xPos = PlayerMovement.instance.transform.position.x / (Spacing * SpacingMultiplier);
+        float yPos = PlayerMovement.instance.transform.position.z / (Spacing * SpacingMultiplier);
+
+        xPos -= UIoffset.x;
+        yPos -= UIoffset.y;
+        RectTransform rt = Player.rectTransform;
+        rt.anchoredPosition = new Vector3(xPos * UIScaling, yPos * UIScaling);
+        //Debug.Log($"{xPos} | {yPos} || {xPos * UIScaling} |{yPos * UIScaling}");
 
         //if (Input.GetKeyDown(KeyCode.Alpha2))
         //{
@@ -611,6 +809,21 @@ public class LevelGenerator : MonoBehaviour
 
     }
 
+    public void ReloadLevel()
+    {
+        StartCoroutine(LoadScene(SceneManager.GetActiveScene().buildIndex));
+    }
+
+    IEnumerator LoadScene(int i)
+    {
+        AsyncOperation op = SceneManager.LoadSceneAsync(i);
+        while (!op.isDone)
+        {
+            float progress = Mathf.Clamp01(op.progress / .9f);
+            Debug.Log(op.progress * 100);
+            yield return null;
+        }
+    }
     void GetLevel()
     {
         GenerateRooms();
@@ -622,6 +835,27 @@ public class LevelGenerator : MonoBehaviour
         }
 
         PlaceDoors();
+
+
+        navMesh.BuildNavMesh();
+
+
+
+        PlayerMovement.instance.SetPositionInstant(FirstRoom.GetComponent<LevelRoom>().bounds.center);
+
+
+        foreach (Transform child in levelParent.transform)
+        {
+            if (child.name.Contains("Path"))
+                return;
+
+            LevelRoom r = child.GetComponent<LevelRoom>();
+
+            r.CanSpawnEnemies = true;
+        }
+
+        //UnityEditor.AI.NavMeshBuilder.ClearAllNavMeshes();
+        //UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
     }
 
     void PlaceDoors()
@@ -632,6 +866,13 @@ public class LevelGenerator : MonoBehaviour
                 return;
 
             LevelRoom r = child.GetComponent<LevelRoom>();
+
+            if(r.transform == FirstRoom.transform)
+            {
+                r.ForceLayout(0);
+            }
+
+            r.ChooseLevelLayout();
 
             var cell = grid.GetCell(int.Parse(child.name));
 
@@ -678,6 +919,8 @@ public class LevelGenerator : MonoBehaviour
 
                 if(i <= 0.8f)
                 {
+
+      
                     grid.SetData(a, 0);
                     var room = Instantiate(RoomObject, levelParent.transform);
 
@@ -686,6 +929,11 @@ public class LevelGenerator : MonoBehaviour
                     room.transform.position = new Vector3(x * Spacing, 0, y * Spacing);
 
                     room.transform.parent = levelParent.transform;
+                    if (FirstRoom == null)
+                        FirstRoom = room;
+
+                    LastRoom = room;
+
                 }
                 else
                 {
@@ -704,6 +952,7 @@ public class LevelGenerator : MonoBehaviour
         foreach (Transform child in levelParent.transform)
         {
             LevelRoom r = child.GetComponent<LevelRoom>();
+            r.GenerateBounds();
 
             var cell = grid.GetCell(int.Parse(child.name));
 
