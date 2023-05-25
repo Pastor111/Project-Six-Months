@@ -48,6 +48,26 @@ public class EnemyBehaviour : MonoBehaviour
 
     }
 
+    public void OnKnifeCollide(Knife knife, int damage)
+    {
+        Life -= damage;
+
+        GetComponent<Renderer>().material.color = DamageColor;
+        StartCoroutine(ShowDamage(0.2f));
+
+
+        if (Life <= 0)
+        {
+            FindObjectOfType<Gun>().ShowHitMarker(Color.red);
+            Die();
+        }
+        else
+        {
+            FindObjectOfType<Gun>().ShowHitMarker(Color.black);
+        }
+
+    }
+
     public void Die()
     {
         Destroy(gameObject);

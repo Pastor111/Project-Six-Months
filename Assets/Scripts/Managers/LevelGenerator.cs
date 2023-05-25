@@ -766,6 +766,11 @@ public class LevelGenerator : MonoBehaviour
             GetLevel();
         }
 
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Debug.Break();
+        }
+
         float xPos = PlayerMovement.instance.transform.position.x / (Spacing * SpacingMultiplier);
         float yPos = PlayerMovement.instance.transform.position.z / (Spacing * SpacingMultiplier);
 

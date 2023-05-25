@@ -13,6 +13,7 @@ public class Gun : MonoBehaviour
     public Weapon currentWeapon;
     public Camera MyCamera;
     public PlayerMovement player;
+    public LayerMask maskToHit;
     [Space]
     [Space]
     [Space]
@@ -41,6 +42,8 @@ public class Gun : MonoBehaviour
     private Transform appearPoint;
     bool CanShoot = true;
     Ray ray;
+    RaycastHit aimAssistHit;
+    Knife thrownKnife;
 
     #endregion
 
@@ -55,12 +58,36 @@ public class Gun : MonoBehaviour
     {
         ray = MyCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
 
-        anim.SetBool("Running", player.Running);
+        aimAssistHit = ApplyAimAssist(currentWeapon.KnifeAimAssist);
 
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        if (aimAssistHit.collider != null)
+            QuickDraw.DrawCircle(20, 1, aimAssistHit.collider.transform.position, Color.yellow, 0.1f);
+
+        if(currentWeapon.type != Weapon.WeaponType.Melee)
+            anim.SetBool("Running", player.Running);
+
+        if (Input.GetKeyDown(KeyCode.Mouse0) && currentWeapon.type == Weapon.WeaponType.SemiAuto)
         {
             TryToShoot();
         }
+
+        if(Input.GetKeyDown(KeyCode.Mouse1) && currentWeapon.type == Weapon.WeaponType.Melee && !anim.GetBool("HasKnife"))
+        {
+            GetBackKnife();
+        }
+
+
+        if (Input.GetKey(KeyCode.Mouse0) && currentWeapon.type == Weapon.WeaponType.FullAuto)
+        {
+            TryToShoot();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Mouse0) && currentWeapon.type == Weapon.WeaponType.Melee)
+        {
+            TryToShoot();
+        }
+
+
 
         if (Input.GetKeyDown(KeyCode.R))
         {
@@ -81,6 +108,14 @@ public class Gun : MonoBehaviour
     public void TryToShoot()
     {
 
+        if (currentWeapon.type == Weapon.WeaponType.Melee && currentWeapon.Bullet == null)
+            return;
+        else if(currentWeapon.type == Weapon.WeaponType.Melee && currentWeapon.Bullet != null && CanShoot && CurrentMag > 0)
+        {
+            StartCoroutine(ThrowKnife(currentWeapon.ShootDELAY));
+            return;
+        }
+
         if(CurrentMag <= 0)
         {
             source.PlayOneShot(EmptyMagSound);
@@ -92,6 +127,13 @@ public class Gun : MonoBehaviour
         }
 
 
+    }
+
+    public RaycastHit ApplyAimAssist(float amount)
+    {
+        //int layerMask = 1 << LayerMask.NameToLayer("Player");
+        Physics.SphereCast(ray.origin, amount, ray.direction, out RaycastHit hit, 100000f, maskToHit);
+        return hit;
     }
 
     public void Shoot()
@@ -107,6 +149,7 @@ public class Gun : MonoBehaviour
         recoil.RecoilFire();
         muzzle.Restart();
         anim.SetTrigger("Shoot");
+
         Physics.Raycast(ray, out RaycastHit hit);
 
         if(hit.collider == null)
@@ -121,11 +164,16 @@ public class Gun : MonoBehaviour
         CurrentMag--;
         CanShoot = false;
         StartCoroutine(ShootDelay(currentWeapon.FireRate));
-        
+        //anim.SetBool("HasKnife", true);
     }
 
     public void Reload()
     {
+
+        if (currentWeapon.type == Weapon.WeaponType.Melee)
+            return;
+
+
         CanShoot = false;
         anim.SetTrigger("Reload");
         source.PlayOneShot(currentWeapon.ReloadSound);
@@ -137,6 +185,27 @@ public class Gun : MonoBehaviour
         HitMarker.gameObject.SetActive(true);
         HitMarker.color = col;
         StartCoroutine(HitMaker_Show(0.1f));
+    }
+
+    public void GetBackKnife()
+    {
+        StartCoroutine(WaitForKnife());
+    }
+
+    IEnumerator WaitForKnife()
+    {
+        while(Vector3.Distance(thrownKnife.transform.position, appearPoint.position) >= 0.5f)
+        {
+            thrownKnife.hitPos = appearPoint.position;
+            anim.SetBool("Reclaim", true);
+            thrownKnife.Return = true;
+            yield return null;
+        }
+        Destroy(thrownKnife.gameObject);
+        anim.SetBool("Reclaim", false);
+        anim.SetBool("HasKnife", true);
+        CurrentMag = 1;
+        CanShoot = true;
     }
 
     IEnumerator HitMaker_Show(float t)
@@ -180,7 +249,11 @@ public class Gun : MonoBehaviour
             if(gunModels[i].name == w.Name)
             {
                 gunModels[i].SetActive(true);
-                appearPoint = gunModels[i].transform.Find("Appear");
+
+                if (currentWeapon.type != Weapon.WeaponType.Melee)
+                    appearPoint = gunModels[i].transform.Find("Appear");
+                else
+                    appearPoint = gunModels[i].transform;
             }
             else
             {
@@ -193,5 +266,59 @@ public class Gun : MonoBehaviour
     {
         yield return new WaitForSeconds(t);
         CanShoot = true;
+    }
+
+    IEnumerator ThrowKnife(float t)
+    {
+        anim.SetTrigger("Shoot");
+
+        CurrentMag = 0;
+        CanShoot = false;
+        yield return new WaitForSeconds(t);
+
+
+        //ray = MyCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
+
+        //aimAssistHit = ApplyAimAssist(currentWeapon.KnifeAimAssist);
+
+
+        var bullet = Instantiate(currentWeapon.Bullet, appearPoint.position, appearPoint.rotation).GetComponent<Knife>();
+        //anim.SetBool("HasKnife", false);
+        //var muzzle = Instantiate(Muzzle, appearPoint.position, appearPoint.rotation).GetComponent<Muzzle>();
+
+        //Debug.Break();
+        source.PlayOneShot(currentWeapon.ShootingSound);
+
+        thrownKnife = bullet;
+
+        EZCameraShake.CameraShaker.Instance.ShakeOnce(currentWeapon.Magnitude, currentWeapon.Rougness, currentWeapon.fadeIn, currentWeapon.fadeout);
+
+        crosshair.Spread += currentWeapon.AddSpread;
+        recoil.RecoilFire();
+        //muzzle.Restart();
+
+        //Debug.Break();
+
+        if (aimAssistHit.collider == null)
+        {
+            bullet.ShootRb(ray.direction);
+            Debug.Log("No Target");
+        }
+        else
+        {
+            Debug.DrawLine(transform.position, aimAssistHit.point, Color.red, 5f);
+            bullet.ShootTransformTarget(aimAssistHit.transform);
+            Debug.Log($"Target : {aimAssistHit.collider.name}");
+        }
+
+        anim.SetBool("HasKnife", false);
+        anim.ResetTrigger("Shoot");
+        //StartCoroutine(ShootDelay(currentWeapon.FireRate));
+
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawRay(ray.origin, ray.direction * 100);
     }
 }

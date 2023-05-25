@@ -9,6 +9,8 @@ public class Weapon : ScriptableObject
     public enum WeaponType {Melee, SemiAuto, FullAuto}
     public WeaponType type;
 
+    public float ShootDELAY;
+    public float KnifeAimAssist = 2;
     public GameObject Bullet;
     public int Mag;
 
