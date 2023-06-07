@@ -18,6 +18,7 @@ public class HeadBobSettings
 public class CameraController : MonoBehaviour
 {
     [Header("Configurations")]
+    public bool Lock;
     public PlayerMovement player;
 
     public float MouseSensitivity = 100f;
@@ -30,6 +31,7 @@ public class CameraController : MonoBehaviour
     [Header("Transforms")]
     public Transform CameraParent;
     public Transform PlayerBody;
+    public Transform PlayerOrientation;
     public Transform CameraHead;
     public Transform CameraFollow;
     [Space]
@@ -79,9 +81,11 @@ public class CameraController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Tilt();
+        if(!Lock)
+            Tilt();
 
-        LookAround();
+        if(!Lock)
+            LookAround();
 
         
 
@@ -89,9 +93,32 @@ public class CameraController : MonoBehaviour
         CameraHead.localRotation = CameraFollow.localRotation;
 
 
-        var vel = new Vector3(player.GetRigidbody().velocity.x, 0, player.GetRigidbody().velocity.z);
-        var fov = Mathf.Lerp(MinFov, MaxFov, vel.magnitude / player.MaxMoveSpeed);
-        cam.fieldOfView = Mathf.MoveTowards(cam.fieldOfView, fov, FOVSpeed * Time.deltaTime);
+        if (!player.Sliding)
+        {
+            //var vel = new Vector3(player.WalkSpeed, 0, player.WalkSpeed);
+            if (player.GetMoveDirUnModified() == Vector3.zero)
+            {
+                var fov = Mathf.Lerp(MinFov, MaxFov, 0.0f);
+                cam.fieldOfView = Mathf.MoveTowards(cam.fieldOfView, fov, FOVSpeed * Time.deltaTime);
+            }
+            else if(!player.Running && player.GetMoveDirUnModified() != Vector3.zero)
+            {
+                var fov = Mathf.Lerp(MinFov, MaxFov, 0.5f);
+                cam.fieldOfView = Mathf.MoveTowards(cam.fieldOfView, fov, FOVSpeed * Time.deltaTime);
+            }
+            else
+            {
+                var fov = Mathf.Lerp(MinFov, MaxFov, 0.7f);
+                cam.fieldOfView = Mathf.MoveTowards(cam.fieldOfView, fov, FOVSpeed * Time.deltaTime);
+            }
+
+        }
+        else
+        {
+            var fov = Mathf.Lerp(MinFov, MaxFov, 0.8f);
+            cam.fieldOfView = Mathf.MoveTowards(cam.fieldOfView, fov, FOVSpeed * Time.deltaTime);
+        }
+
         //float multiplier = 1;
         //Debug.Log((player.GetRigidbody().velocity.y / player.MaxYSpeed));
         //extraOffset.y = (player.GetRigidbody().velocity.y / player.MaxSpeed) * multiplier;
@@ -144,7 +171,8 @@ public class CameraController : MonoBehaviour
         //else
         //    transform.localRotation = Quaternion.RotateTowards(transform.localRotation, Quaternion.Euler(transform.localRotation.eulerAngles.x, transform.localRotation.eulerAngles.y, 0), player.TiltSpeed * Time.deltaTime);
 
-        PlayerBody.rotation = Quaternion.Euler(0, yRotation, 0);
+        //PlayerBody.rotation = Quaternion.Euler(0, yRotation, 0);
+        PlayerOrientation.rotation = Quaternion.Euler(0, yRotation, 0);
 
         Vector3 finalSway = Vector3.zero;
 

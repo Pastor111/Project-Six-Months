@@ -7,10 +7,14 @@ public class PlayerMovement : MonoBehaviour
 {
 
     [Header("Configurations")]
+    public bool Lock;
     public CameraController cam;
+    public Transform orientation;
+    public float SpeedMultiplier;
     public float WalkSpeed;
     public float RunningSpeed;
-    public float MaxSpeed;
+    public float MaxSpeed_Walk;
+    public float MaxSpeed_Run;
     public float MaxMoveSpeed;
     public float Acceleration;
     public float JumpForce;
@@ -35,10 +39,20 @@ public class PlayerMovement : MonoBehaviour
     [Space]
     [Space]
     [Space]
+    [Header("Counter Movement")]
+    public float Threshold;
+    public float counterMovement;
+    [Space]
+    [Space]
+    [Space]
     [Header("Game Feel")]
     public Transform cameraMovementEffect;
     public float CameraTiltAmount;
     public float TiltSpeed;
+    [Space]
+    [Space]
+    public float InputBufferMaxTime;
+    float LastJumpPress;
 
     [Header("====FootSteps=====")]
     public float MinTimeBetweenSteps;
@@ -60,7 +74,8 @@ public class PlayerMovement : MonoBehaviour
     float speedMultiplier = 1;
     bool WallRun;
     bool wasGrounded;
-    bool Sliding;
+    [HideInInspector]
+    public bool Sliding;
     [HideInInspector]
     public bool Running;
 
@@ -77,7 +92,7 @@ public class PlayerMovement : MonoBehaviour
 
     public Vector3 GetMoveDirUnModified()
     {
-        return new Vector3(x, 0, z);
+        return new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
     }
 
     float walkTime = 0;
@@ -111,7 +126,8 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        DoMovement();
+        if(!Lock)
+            DoMovement();
 
 
         if(Grounded && !wasGrounded)
@@ -172,12 +188,22 @@ public class PlayerMovement : MonoBehaviour
         //cam.AddExtraOffset(new Vector3(0, JumpingOffset, 0));
     }
 
+    public Vector3 GetMovementVector()
+    {
+        return rb.velocity;
+    }
+
     private void FixedUpdate()
     {
+
+        rb.AddForce(Vector3.down * ExtraGravity * Time.deltaTime * 10);
+
+
         if (jumping)
         {
             rb.AddForce(Vector3.up * JumpForce);
             jumping = false;
+            LastJumpPress = 0.0f;
         }
 
         if (Grounded)
@@ -186,22 +212,100 @@ public class PlayerMovement : MonoBehaviour
             speedMultiplier = AirSpeedMultiplier;
 
 
+
+        Vector2 mag = FindVelRelativeToLook();
+        float xMag = mag.x, yMag = mag.y;
+
+        //Counteract sliding and sloppy movement
+        CounterMovement(x, z, mag);
+
+  
+        //moveDir = transform.forward * z + transform.right * x;
+
+
+
+
         if (!Sliding)
         {
             if (!Running)
-                rb.velocity = new Vector3(moveDir.x * WalkSpeed, rb.velocity.y, moveDir.z * WalkSpeed);
+            {
+                if (x > 0 && xMag > MaxSpeed_Walk) x = 0;
+                if (x < 0 && xMag < -MaxSpeed_Walk) x = 0;
+                if (z > 0 && yMag > MaxSpeed_Walk) z = 0;
+                if (z < 0 && yMag < -MaxSpeed_Walk) z = 0;
+
+
+                //rb.AddForce(moveDir * WalkSpeed * SpeedMultiplier);
+                rb.AddForce(orientation.transform.forward * z * WalkSpeed * Time.deltaTime);
+                rb.AddForce(orientation.transform.right * x * WalkSpeed * Time.deltaTime);
+            }
+            //rb.velocity = new Vector3(moveDir.x * WalkSpeed, rb.velocity.y, moveDir.z * WalkSpeed);
             else
-                rb.velocity = new Vector3(moveDir.x * RunningSpeed, rb.velocity.y, moveDir.z * RunningSpeed);
+            {
+                if (x > 0 && xMag > MaxSpeed_Run) x = 0;
+                if (x < 0 && xMag < -MaxSpeed_Run) x = 0;
+                if (z > 0 && yMag > MaxSpeed_Run) z = 0;
+                if (z < 0 && yMag < -MaxSpeed_Run) z = 0;
+
+                rb.AddForce(orientation.transform.forward * z * RunningSpeed * Time.deltaTime);
+                rb.AddForce(orientation.transform.right * x * RunningSpeed * Time.deltaTime);
+
+                //rb.AddForce(moveDir * RunningSpeed * SpeedMultiplier);
+            }
+
+            //rb.velocity = new Vector3(moveDir.x * RunningSpeed, rb.velocity.y, moveDir.z * RunningSpeed);
         }
         else
         {
+            //rb.AddForce(slideDir * SlideForce * Time.deltaTime);
+            //rb.AddForce(orientation.transform.right * x * WalkSpeed * Time.deltaTime);
             rb.velocity = new Vector3(slideDir.x * SlideForce, rb.velocity.y, slideDir.z * SlideForce);
         }
 
-         rb.AddForce(Vector3.down * ExtraGravity);
+        //if (rb.velocity.magnitude >= MaxSpeed)
+        //    rb.velocity = Vector3.ClampMagnitude(rb.velocity, MaxSpeed);
+    }
 
-        if (rb.velocity.magnitude >= MaxSpeed)
-            rb.velocity = Vector3.ClampMagnitude(rb.velocity, MaxSpeed);
+    public void CounterMovement(float x, float y, Vector2 mag)
+    {
+        if (!Grounded || jumping) return;
+
+        //Slow down sliding
+        //if (Sliding)
+        //{
+        //    rb.AddForce(WalkSpeed * Time.deltaTime * -rb.velocity.normalized * slideCounterMovement);
+        //    return;
+        //}
+
+        //Counter movement
+        if (Math.Abs(mag.x) > Threshold && Math.Abs(x) < 0.05f || (mag.x < -Threshold && x > 0) || (mag.x > Threshold && x < 0))
+        {
+            rb.AddForce(WalkSpeed * orientation.transform.right * Time.deltaTime * -mag.x * counterMovement);
+        }
+        if (Math.Abs(mag.y) > Threshold && Math.Abs(y) < 0.05f || (mag.y < -Threshold && y > 0) || (mag.y > Threshold && y < 0))
+        {
+            rb.AddForce(WalkSpeed * orientation.transform.forward * Time.deltaTime * -mag.y * counterMovement);
+        }
+    }
+
+    /// <summary>
+    /// Find the velocity relative to where the player is looking
+    /// Useful for vectors calculations regarding movement and limiting movement
+    /// </summary>
+    /// <returns></returns>
+    public Vector2 FindVelRelativeToLook()
+    {
+        float lookAngle = transform.eulerAngles.y;
+        float moveAngle = Mathf.Atan2(rb.velocity.x, rb.velocity.z) * Mathf.Rad2Deg;
+
+        float u = Mathf.DeltaAngle(lookAngle, moveAngle);
+        float v = 90 - u;
+
+        float magnitue = rb.velocity.magnitude;
+        float yMag = magnitue * Mathf.Cos(u * Mathf.Deg2Rad);
+        float xMag = magnitue * Mathf.Cos(v * Mathf.Deg2Rad);
+
+        return new Vector2(xMag, yMag);
     }
 
     public bool VectorsAreSimilar(Vector3 a, Vector3 b)
@@ -232,17 +336,31 @@ public class PlayerMovement : MonoBehaviour
         x = Input.GetAxisRaw("Horizontal");
         z = Input.GetAxisRaw("Vertical");
 
-        moveDir = transform.forward * z + transform.right * x;
 
         Running = Input.GetKey(KeyCode.LeftShift);
 
         if (moveDir.magnitude >= 1)
             moveDir = Vector3.ClampMagnitude(moveDir, 1.0f);
 
+        if(LastJumpPress != 0.0f)
+        {
+            if ((Time.time - LastJumpPress) <= InputBufferMaxTime)
+            {
+                if(Grounded)
+                    jumping = true;
+            }else
+            {
+                LastJumpPress = 0.0f;
+            }
+
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (Grounded)
                 jumping = true;
+            else
+                LastJumpPress = Time.time;
 
         }
 

@@ -153,7 +153,7 @@ namespace GridPathFinder
         }
 
         /// <summary>
-        /// the id of the tile and the data of the tile(0 - Normal || 1 - Cant Pass)
+        /// the id of the tile and the data of the tile(0 - Normal Room || 1 - Void || 2 - Shop Room)
         /// </summary>
         /// <param name="id"></param>
         /// <param name="data"></param>
@@ -180,7 +180,10 @@ namespace GridPathFinder
             {
                 var cell = GetCell(i);
 
-                if (cell == null || cell.data == 1)
+                if (cell == null)
+                    continue;
+
+                if (cell.data == 1)
                     continue;
 
                 if(cell.LeftNeighBour == null)
@@ -190,7 +193,7 @@ namespace GridPathFinder
                     {
                         cell.LeftNeighBour = null;
                     }
-                    else if (i % 4 == 0)
+                    else if (i % Width == 0)
                     {
                         cell.LeftNeighBour = null;
                     }
@@ -215,7 +218,7 @@ namespace GridPathFinder
                     {
                         cell.RightNeighBour = null;
                     }
-                    else if ((i + 1) % 4 == 0)
+                    else if ((i + 1) % Width == 0)
                     {
                         cell.RightNeighBour = null;
                     }
@@ -351,99 +354,99 @@ namespace GridPathFinder
 
         }
 
-        public void FillTexture(Texture2D t, Color c)
-        {
-            for (int x = 0; x < t.width; x++)
-            {
-                for (int y = 0; y < t.height; y++)
-                {
-                    t.SetPixel(x, y, c);
-                }
-            }
-        }
+        //public void FillTexture(Texture2D t, Color c)
+        //{
+        //    for (int x = 0; x < t.width; x++)
+        //    {
+        //        for (int y = 0; y < t.height; y++)
+        //        {
+        //            t.SetPixel(x, y, c);
+        //        }
+        //    }
+        //}
 
-        public Texture2D mapTexture
-        {
-            get
-            {
-                var t = new Texture2D(Width * 4 + 1, Height * 4 + 1);
-                t.filterMode = FilterMode.Point;
+        //public Texture2D mapTexture
+        //{
+        //    get
+        //    {
+        //        var t = new Texture2D(Width * 4 + 1, Height * 4 + 1);
+        //        t.filterMode = FilterMode.Point;
 
-                int i = 0;
+        //        int i = 0;
 
-                FillTexture(t, Color.black);
+        //        FillTexture(t, Color.black);
 
-                for (int x = 2; x < t.width; x += 4)
-                {
-                    for (int y = 2; y < t.height; y += 4)
-                    {
+        //        for (int x = 2; x < t.width; x += 4)
+        //        {
+        //            for (int y = 2; y < t.height; y += 4)
+        //            {
 
-                        if (cells[i].data == 0)
-                        {
-                            t.SetPixel(x + 1, y, Color.white);
-                            t.SetPixel(x - 1, y, Color.white);
-                            t.SetPixel(x, y + 1, Color.white);
-                            t.SetPixel(x, y - 1, Color.white);
-                            t.SetPixel(x, y, Color.white);
-                            t.SetPixel(x + 1, y + 1, Color.white);
-                            t.SetPixel(x - 1, y - 1, Color.white);
-                            t.SetPixel(x + 1, y - 1, Color.white);
-                            t.SetPixel(x - 1, y + 1, Color.white);
-                        }
-                        else
-                        {
-                            t.SetPixel(x + 1, y, Color.black);
-                            t.SetPixel(x - 1, y, Color.black);
-                            t.SetPixel(x, y + 1, Color.black);
-                            t.SetPixel(x, y - 1, Color.black);
-                            t.SetPixel(x, y, Color.black);
-                            t.SetPixel(x + 1, y + 1, Color.black);
-                            t.SetPixel(x - 1, y - 1, Color.black);
-                            t.SetPixel(x + 1, y - 1, Color.black);
-                            t.SetPixel(x - 1, y + 1, Color.black);
-                        }
+        //                if (cells[i].data == 0)
+        //                {
+        //                    t.SetPixel(x + 1, y, Color.white);
+        //                    t.SetPixel(x - 1, y, Color.white);
+        //                    t.SetPixel(x, y + 1, Color.white);
+        //                    t.SetPixel(x, y - 1, Color.white);
+        //                    t.SetPixel(x, y, Color.white);
+        //                    t.SetPixel(x + 1, y + 1, Color.white);
+        //                    t.SetPixel(x - 1, y - 1, Color.white);
+        //                    t.SetPixel(x + 1, y - 1, Color.white);
+        //                    t.SetPixel(x - 1, y + 1, Color.white);
+        //                }
+        //                else
+        //                {
+        //                    t.SetPixel(x + 1, y, Color.black);
+        //                    t.SetPixel(x - 1, y, Color.black);
+        //                    t.SetPixel(x, y + 1, Color.black);
+        //                    t.SetPixel(x, y - 1, Color.black);
+        //                    t.SetPixel(x, y, Color.black);
+        //                    t.SetPixel(x + 1, y + 1, Color.black);
+        //                    t.SetPixel(x - 1, y - 1, Color.black);
+        //                    t.SetPixel(x + 1, y - 1, Color.black);
+        //                    t.SetPixel(x - 1, y + 1, Color.black);
+        //                }
 
 
-                        i++;
+        //                i++;
 
-                    }
-                }
+        //            }
+        //        }
 
-                for (int x = 0; x < t.width; x += 4)
-                {
-                    for (int y = 2; y < t.height; y += 4)
-                    {
-                        if (x == 0 || y == 0)
-                            continue;
+        //        for (int x = 0; x < t.width; x += 4)
+        //        {
+        //            for (int y = 2; y < t.height; y += 4)
+        //            {
+        //                if (x == 0 || y == 0)
+        //                    continue;
 
-                        if((t.GetPixel(x + 1, y) == Color.white || t.GetPixel(x, y + 1) == Color.white) && (t.GetPixel(x - 1, y) == Color.white || t.GetPixel(x, y - 1) == Color.white))
-                        {
-                            t.SetPixel(x, y, Color.gray);
-                        }
-                    }
-                }
+        //                if((t.GetPixel(x + 1, y) == Color.white || t.GetPixel(x, y + 1) == Color.white) && (t.GetPixel(x - 1, y) == Color.white || t.GetPixel(x, y - 1) == Color.white))
+        //                {
+        //                    t.SetPixel(x, y, Color.gray);
+        //                }
+        //            }
+        //        }
 
-                for (int x = 2; x < t.width; x += 4)
-                {
-                    for (int y = 0; y < t.height; y += 4)
-                    {
-                        if (x == 0 || y == 0)
-                            continue;
+        //        for (int x = 2; x < t.width; x += 4)
+        //        {
+        //            for (int y = 0; y < t.height; y += 4)
+        //            {
+        //                if (x == 0 || y == 0)
+        //                    continue;
 
-                        if ((t.GetPixel(x + 1, y) == Color.white || t.GetPixel(x, y + 1) == Color.white) && (t.GetPixel(x - 1, y) == Color.white || t.GetPixel(x, y - 1) == Color.white))
-                        {
-                            t.SetPixel(x, y, Color.gray);
-                        }
-                    }
-                }
+        //                if ((t.GetPixel(x + 1, y) == Color.white || t.GetPixel(x, y + 1) == Color.white) && (t.GetPixel(x - 1, y) == Color.white || t.GetPixel(x, y - 1) == Color.white))
+        //                {
+        //                    t.SetPixel(x, y, Color.gray);
+        //                }
+        //            }
+        //        }
 
-                t.Apply();
+        //        t.Apply();
 
-                System.IO.File.WriteAllBytes(Application.dataPath + "/Level.png", t.EncodeToPNG());
+        //        System.IO.File.WriteAllBytes(Application.dataPath + "/Level.png", t.EncodeToPNG());
 
-                return t;
-            }
-        }
+        //        return t;
+        //    }
+        //}
 
         //public Texture2D GetHighQualityImage(int width, int height, int outline)
         //{
@@ -719,6 +722,7 @@ public class LevelGenerator : MonoBehaviour
     public Vector3 doorSize2;
     public NavMeshSurface navMesh;
     public EnemyBehaviour[] AvailableEnemies;
+    public ItemProbability[] AvailableObjectsToReward;
     public UnityEngine.UI.Image MiniMap;
     public UnityEngine.UI.Image Player;
     public Vector2 UIoffset;
@@ -732,6 +736,8 @@ public class LevelGenerator : MonoBehaviour
 
     public Texture2D map;
 
+    public GameObject Shop;
+
     public GridPathFinder.Grid grid;
 
     GridPathFinder.Path path;
@@ -740,7 +746,7 @@ public class LevelGenerator : MonoBehaviour
 
     //[HideInInspector]
     public GameObject FirstRoom;
-    [HideInInspector]
+    //[HideInInspector]
     public GameObject LastRoom;
 
     public static LevelGenerator generator;
@@ -750,21 +756,21 @@ public class LevelGenerator : MonoBehaviour
         generator = this;
         AudioManager.Init();
         GetLevel();
-        myGridTexture = grid.mapTexture;
-        myGridTexture.SetPixel((int)(FirstRoom.transform.position.x / Spacing), (int)(FirstRoom.transform.position.z / Spacing), Color.green);
-        myGridTexture.SetPixel((int)(LastRoom.transform.position.x / Spacing), (int)(LastRoom.transform.position.z / Spacing), Color.red);
-        //myGridTexture.SetPixel((int)(levelParent.transform.transform.position.x / Spacing), (int)(levelParent.transform.GetChild(0).transform.position.z / Spacing), Color.green);
-        myGridTexture.Apply();
-        MiniMap.sprite = Sprite.Create(myGridTexture, new Rect(0, 0, grid.mapTexture.width, grid.mapTexture.height), new Vector2(0, 0));
+        //myGridTexture = grid.mapTexture;
+        //myGridTexture.SetPixel((int)(FirstRoom.transform.position.x / Spacing), (int)(FirstRoom.transform.position.z / Spacing), Color.green);
+        //myGridTexture.SetPixel((int)(LastRoom.transform.position.x / Spacing), (int)(LastRoom.transform.position.z / Spacing), Color.red);
+        ////myGridTexture.SetPixel((int)(levelParent.transform.transform.position.x / Spacing), (int)(levelParent.transform.GetChild(0).transform.position.z / Spacing), Color.green);
+        //myGridTexture.Apply();
+        //MiniMap.sprite = Sprite.Create(myGridTexture, new Rect(0, 0, grid.mapTexture.width, grid.mapTexture.height), new Vector2(0, 0));
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            GetLevel();
-        }
+        //if (Input.GetKeyDown(KeyCode.Alpha1))
+        //{
+        //    GetLevel();
+        //}
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -788,29 +794,29 @@ public class LevelGenerator : MonoBehaviour
         //}
 
 
-        if (path != null && path.Usable)
-        {
-            for (int i = 1; i < path.points.Length; i++)
-            {
+        //if (path != null && path.Usable)
+        //{
+        //    for (int i = 1; i < path.points.Length; i++)
+        //    {
 
-                Vector3 p0 = Vector3.zero;
-                Vector3 p1 = Vector3.zero;
-                foreach (Transform child in levelParent.transform)
-                {
-                    if(child.name == path.points[i].ToString())
-                    {
-                        p1 = child.position;
-                    }
+        //        Vector3 p0 = Vector3.zero;
+        //        Vector3 p1 = Vector3.zero;
+        //        foreach (Transform child in levelParent.transform)
+        //        {
+        //            if(child.name == path.points[i].ToString())
+        //            {
+        //                p1 = child.position;
+        //            }
 
-                    if (child.name == path.points[i - 1].ToString())
-                    {
-                        p0= child.position;
-                    }
-                }
+        //            if (child.name == path.points[i - 1].ToString())
+        //            {
+        //                p0= child.position;
+        //            }
+        //        }
 
-                Debug.DrawLine(p0, p1);
-            }
-        }
+        //        Debug.DrawLine(p0, p1);
+        //    }
+        //}
 
     }
 
@@ -831,37 +837,87 @@ public class LevelGenerator : MonoBehaviour
     }
     void GetLevel()
     {
-        GenerateRooms();
-        var canGo = grid.CanGoTo(0, (Width * Height) - 1, out path);
+
+        MakeGrid();
+
+
+        int startRoom = -1;
+        int lastRoom = 0;
+
+        for (int i = 0; i < grid.cells.Length; i++)
+        {
+            if (grid.cells[i].data == 0)
+            {
+                if(startRoom == -1)
+                    startRoom = i;
+
+                lastRoom = i;
+            }
+
+        }
+
+
+        var canGo = grid.CanGoTo(startRoom, lastRoom, out path);
 
         if (!canGo)
         {
+            MiniMapManager.GetMiniMap().DeleteAllIcons();
             GetLevel();
         }
-
-        PlaceDoors();
-
-
-        navMesh.BuildNavMesh();
-
-
-
-        PlayerMovement.instance.SetPositionInstant(FirstRoom.GetComponent<LevelRoom>().bounds.center);
-
-
-        foreach (Transform child in levelParent.transform)
+        else
         {
-            if (child.name.Contains("Path"))
-                return;
 
-            LevelRoom r = child.GetComponent<LevelRoom>();
+            for (int i = 0; i < grid.cells.Length; i++)
+            {
+                if(grid.CanGoTo(startRoom, i, out GridPathFinder.Path p))
+                {
 
-            r.CanSpawnEnemies = true;
+                }
+                else
+                {
+                    grid.cells[i].data = 1;
+                    grid.SetNeightBours();
+                }
+            }
+
+            GenerateRooms();
+
+            FirstRoom = levelParent.transform.Find(startRoom.ToString()).gameObject;
+            LastRoom = levelParent.transform.Find(lastRoom.ToString()).gameObject;
+
+            //StartCoroutine(PlacePlayer());
+
+            PlayerMovement.instance.SetPositionInstant(FirstRoom.GetComponent<LevelRoom>().bounds.center);
+
+            PlaceDoors();
+
+
+            navMesh.BuildNavMesh();
+
+            foreach (Transform child in levelParent.transform)
+            {
+                if (child.name.Contains("Path"))
+                    continue;
+
+                LevelRoom r = child.GetComponent<LevelRoom>();
+
+                r.CanSpawnEnemies = true;
+            }
+
+
+
+
         }
 
         //UnityEditor.AI.NavMeshBuilder.ClearAllNavMeshes();
         //UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
     }
+
+    //IEnumerator PlacePlayer()
+    //{
+
+
+    //}
 
     void PlaceDoors()
     {
@@ -879,7 +935,7 @@ public class LevelGenerator : MonoBehaviour
 
             r.ChooseLevelLayout();
 
-            var cell = grid.GetCell(int.Parse(child.name));
+            //var cell = grid.GetCell(int.Parse(child.name));
 
             if(r.Left != null)
             {
@@ -901,9 +957,37 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
-    void GenerateRooms()
+    public void MakeGrid()
     {
         grid = new GridPathFinder.Grid(Width, Height);
+
+        int a = 0;
+        for (int x = 0; x < Width; x++)
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                float i = Random.Range(0.0f, 1.0f);
+
+                if (i <= 0.8f)
+                {
+                    grid.SetData(a, 0);
+                }
+                else
+                {
+
+                    grid.SetData(a, 1);
+                }
+                a++;
+
+            }
+        }
+
+        grid.SetNeightBours();
+    }
+
+    void GenerateRooms()
+    {
+      
 
         if (levelParent != null)
             Destroy(levelParent);
@@ -913,20 +997,16 @@ public class LevelGenerator : MonoBehaviour
 
         nextPoints = new List<Vector3>();
         var extra = new List<GameObject>();
-        // Generate Room
 
         int a = 0;
         for (int x = 0; x < Width; x++)
         {
             for (int y = 0; y < Height; y++)
             {
-                float i = Random.Range(0.0f, 1.0f);
 
-                if(i <= 0.8f)
+                if(grid.cells[a].data == 0)
                 {
 
-      
-                    grid.SetData(a, 0);
                     var room = Instantiate(RoomObject, levelParent.transform);
 
                     room.gameObject.name = (a).ToString();
@@ -943,11 +1023,30 @@ public class LevelGenerator : MonoBehaviour
                 else
                 {
 
-                    grid.SetData(a, 1);
+                    //grid.SetData(a, 1);
                 }
                 a++;
 
             }
+        }
+
+
+        bool storeSet = false;
+
+        while (!storeSet)
+        {
+            int x = Random.Range(0, Width * Height);
+
+            if (x != 0 && grid.GetCell(x).data == 0)
+            {
+                //grid.SetData(x, 2);
+                LevelRoom r = GameObject.Find(x.ToString()).GetComponent<LevelRoom>();
+                Instantiate(Shop, r.GetFreePosition(), Shop.transform.rotation, r.transform);
+                storeSet = true;
+                Debug.Log($"Store is in room {x}");
+                Debug.Log($"Store is in room {x}");
+            }
+
         }
 
         grid.SetNeightBours();
@@ -997,7 +1096,8 @@ public class LevelGenerator : MonoBehaviour
         //    extra[i].transform.parent = levelParent.transform;
         //}
 
-        map = grid.mapTexture;
+        //map = grid.mapTexture;
+        GetComponent<MiniMapManager>().GenerateMiniMap(grid);
     }
 
     private void OnDrawGizmos()

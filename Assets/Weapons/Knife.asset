@@ -18,10 +18,13 @@ MonoBehaviour:
   KnifeAimAssist: 2
   Bullet: {fileID: 5182879463459258133, guid: b8baacdfe85981d48bb6a5761b06bf6a, type: 3}
   Mag: 1
+  DefaultMaxMag: 0
   FireRate: 1
   ReloadTime: 0
   ShootingSound: {fileID: 8300000, guid: 654b9e59a4b109743988eb35b5323424, type: 3}
   ReloadSound: {fileID: 0}
+  MinMaxPickUpGunMag: {x: 1, y: 1}
+  MinMaxPickUpGunFullMag: {x: 0, y: 0}
   NormalSpread: 0
   AddSpread: 0
   NormalRecoil: {x: 0, y: 0, z: 0}

@@ -100,6 +100,54 @@ public class Knife : MonoBehaviour
                 Ray r = new Ray(transform.position, (transform.position - lastPos));
 
                 transform.position = hit.point - (r.direction * 0.2f);
+
+                EnemyBehaviour enemy = hit.transform.GetComponent<Collider>().GetComponent<EnemyBehaviour>();
+
+                if(enemy != null)
+                {
+
+                    EzySlice.Plane cuttingPlane = new EzySlice.Plane();
+
+                    // the plane will be set to the same coordinates as the object that this
+                    // script is attached to
+                    // NOTE -> Debug Gizmo drawing only works if we pass the transform
+                    cuttingPlane.Compute(sliceNormal);
+
+
+
+                    var a = enemy.gameObject.Slice(transform.position, sliceNormal.forward, enemy.GetComponent<Renderer>().material);
+                    var part_a = a.CreateLowerHull();
+                    var part_b = a.CreateUpperHull();
+
+                    part_a.GetComponent<Renderer>().material = enemy.GetComponent<Renderer>().material;
+                    part_b.GetComponent<Renderer>().material = enemy.GetComponent<Renderer>().material;
+
+                    part_a.GetComponent<Renderer>().material.color = Color.red;
+                    part_b.GetComponent<Renderer>().material.color = Color.red;
+
+                    part_a.transform.position = enemy.transform.position;
+                    part_b.transform.position = enemy.transform.position;
+                    hitPos = Vector3.zero;
+
+                    transform.SetParent(part_a.transform);
+
+                    part_a.AddComponent<MeshCollider>().sharedMesh = a.lowerHull;
+                    part_a.GetComponent<MeshCollider>().convex = true;
+                    part_a.AddComponent<Rigidbody>();
+
+
+                    part_b.AddComponent<MeshCollider>().sharedMesh = a.upperHull;
+                    part_b.GetComponent<MeshCollider>().convex = true;
+                    part_b.AddComponent<Rigidbody>();
+
+                    part_a.GetComponent<Rigidbody>().AddExplosionForce(10000, enemy.transform.position, 10);
+                    part_a.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                    part_b.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                    part_b.GetComponent<Rigidbody>().AddExplosionForce(10000, enemy.transform.position, 10);
+
+                    enemy.OnKnifeCollide(this, 100);
+
+                }
             }
 
         }

@@ -8,16 +8,25 @@ public class Weapon : ScriptableObject
     public string Name;
     public enum WeaponType {Melee, SemiAuto, FullAuto}
     public WeaponType type;
+    public bool InfiniteAmmo;
 
     public float ShootDELAY;
     public float KnifeAimAssist = 2;
     public GameObject Bullet;
     public int Mag;
+    public int DefaultMaxMag;
 
     public float FireRate;
     public float ReloadTime;
     public AudioClip ShootingSound;
     public AudioClip ReloadSound;
+
+    [Space]
+    [Space]
+    [Space]
+    [Header("Pick Up")]
+    public Vector2 MinMaxPickUpGunMag;
+    public Vector2 MinMaxPickUpGunFullMag;
 
     [Space]
     [Space]

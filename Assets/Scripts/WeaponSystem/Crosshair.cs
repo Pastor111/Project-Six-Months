@@ -12,7 +12,7 @@ public class Cross
 
 public class Crosshair : MonoBehaviour
 {
-    public Weapon correspondingWeapon;
+    //public Weapon correspondingWeapon;
     public Cross[] imgs;
     public Color color;
     public float Spread;

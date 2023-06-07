@@ -12,6 +12,8 @@ public class LevelRoom : MonoBehaviour
 
     public GameObject Button;
 
+    public int ActiveLayout;
+
     public GameObject LeftWall;
     public GameObject RightWall;
     public GameObject TopWall;
@@ -28,11 +30,14 @@ public class LevelRoom : MonoBehaviour
     public List<GameObject> Doors;
     public List<GameObject> Enemies;
 
+    public List<GameObject> EnemySpawns; 
+
     public Bounds bounds;
 
     bool wasPlayerHereLastFrame;
     bool HasBeatenRoom = false;
     bool EnemiesWereSpawned = false;
+    bool HasGivenReward = false;
 
     public bool CanSpawnEnemies = false;
 
@@ -68,61 +73,146 @@ public class LevelRoom : MonoBehaviour
     void Update()
     {
 
-        if (!CanSpawnEnemies)
-            return;
-
-        if (LevelGenerator.generator.FirstRoom == gameObject)
-            ForceLayout(0);
-
-        if (LevelGenerator.generator.FirstRoom != null && transform == LevelGenerator.generator.FirstRoom.transform)
-            return;
-
-        if (IsPlayerInside && !wasPlayerHereLastFrame && !HasBeatenRoom && !EnemiesWereSpawned /*(Enemies == null || Enemies.Count <= 0)*/)
+        if (LevelGenerator.generator.FirstRoom == null)
         {
-            CloseDoors();
-            SpawnEnemies();
-            //StartCoroutine(Test());
+
         }
-
-        for (int i = 0; i < Enemies.Count; i++)
+        else
         {
-            if(Enemies[i] == null)
+
+            if (transform == LevelGenerator.generator.FirstRoom.transform)
             {
-                Enemies.RemoveAt(i);
+                ForceLayout(0);
+                return;
             }
-        }
-
-        if (IsPlayerInside)
-        {
-            if(!HasBeatenRoom)
+            else if(LevelGenerator.generator.grid.GetCell(int.Parse(transform.name)).data == 2)
             {
-                CloseDoors();
+
+                return;
             }
-
-        }
-        if (IsPlayerInside && wasPlayerHereLastFrame && Enemies.Count <= 0 && EnemiesWereSpawned)
-        {
-            OpenDoors();
-            HasBeatenRoom = true;
-
-            if (LevelGenerator.generator.LastRoom != null && transform == LevelGenerator.generator.LastRoom.transform)
-                Button.SetActive(true);
             else
-                Button.SetActive(false);
+            {
+
+
+                if (!CanSpawnEnemies)
+                    return;
+
+                if (IsPlayerInside && !wasPlayerHereLastFrame && !HasBeatenRoom && !EnemiesWereSpawned /*(Enemies == null || Enemies.Count <= 0)*/)
+                {
+                    CloseDoors();
+                    SpawnEnemies();
+                    //StartCoroutine(Test());
+                }
+
+                for (int i = 0; i < Enemies.Count; i++)
+                {
+                    if (Enemies[i] == null)
+                    {
+                        Enemies.RemoveAt(i);
+                    }
+                }
+
+                if (IsPlayerInside)
+                {
+                    if (!HasBeatenRoom)
+                    {
+                        CloseDoors();
+                    }
+
+                }
+                if (IsPlayerInside && wasPlayerHereLastFrame && Enemies.Count <= 0 && EnemiesWereSpawned)
+                {
+                    OpenDoors();
+
+                    if (!HasGivenReward)
+                    {
+                        HasGivenReward = true;
+
+                        Player.instance.SetGold(Player.instance.GetGold() + Random.Range(5, 20));
+
+                        int r = Random.Range(0, 100);
+
+                        if (r >= 40)
+                        {
+
+                            HasGivenReward = true;
+                            var layout = LevelLayouts[ActiveLayout];
+
+                            var chests = layout.transform.GetComponentsInChildren<Chest>(true);
+
+                            int i = Random.Range(0, 100);
+                            int x = Random.Range(0, chests.Length);
+
+                            GameObject chest = null;
+
+                            foreach (ItemProbability item in LevelGenerator.generator.AvailableObjectsToReward)
+                            {
+                                if (i >= item.Probability.x && i <= item.Probability.y)
+                                {
+                                    chest = Instantiate(item.obj, chests[x].transform.position, chests[x].transform.rotation);
+                                }
+                            }
+
+
+
+                            var icon = MiniMapManager.GetMiniMap().PlaceItemInMiniMap(int.Parse(transform.name), MiniMapManager.GetMiniMap().ChestIcon, Color.white, new Vector3(0.2f, 0.2f));
+
+                            if (chest.GetComponent<Chest>() != null)
+                            {
+                                chest.GetComponent<Chest>().Icon = icon;
+                            }
+                        }
+
+                        HasGivenReward = true;
+                    }
+
+                    HasBeatenRoom = true;
+
+                    if (LevelGenerator.generator.LastRoom != null && transform == LevelGenerator.generator.LastRoom.transform)
+                        Button.SetActive(true);
+                    else
+                        Button.SetActive(false);
+
+                }
+
+
+                //QuickDraw.DrawBounds(bounds);
+
+                wasPlayerHereLastFrame = IsPlayerInside;
+            }
 
         }
 
+    }
 
-        //QuickDraw.DrawBounds(bounds);
+    public Vector3 GetFreePosition()
+    {
+        var layout = LevelLayouts[ActiveLayout];
 
-        wasPlayerHereLastFrame = IsPlayerInside;
+        var chests = layout.transform.GetComponentsInChildren<Chest>(true);
 
+        //int i = Random.Range(0, 100);
+        int x = Random.Range(0, chests.Length);
+
+        return chests[x].transform.position;
     }
 
     public void ForceLayout(int i)
     {
 
         LevelLayouts[i].SetActive(true);
+
+
+        ActiveLayout = i;
+
+        foreach (Transform child in LevelLayouts[i].transform)
+        {
+            if (child.name.Contains("Spawn"))
+            {
+                EnemySpawns.Add(child.gameObject);
+                child.gameObject.SetActive(false);
+            }
+        }
 
         for (int x = 0; x < LevelLayouts.Length; x++)
         {
@@ -137,6 +227,18 @@ public class LevelRoom : MonoBehaviour
 
         LevelLayouts[i].SetActive(true);
 
+        ActiveLayout = i;
+
+
+        foreach (Transform child in LevelLayouts[i].transform)
+        {
+            if (child.name.Contains("Spawn"))
+            {
+                EnemySpawns.Add(child.gameObject);
+                child.gameObject.SetActive(false);
+            }
+        }
+
         for (int x = 0; x < LevelLayouts.Length; x++)
         {
             if (x != i)
@@ -144,18 +246,35 @@ public class LevelRoom : MonoBehaviour
         }
     }
 
-    IEnumerator WaitSpawn(float t)
+    IEnumerator WaitSpawn(float t, float t2)
     {
         yield return new WaitForSeconds(t);
         int amount = Random.Range(1, 8);
 
+        Transform[] pos = new Transform[amount];
+
         for (int i = 0; i < amount; i++)
         {
-            var pos = RandomPointInBounds(bounds);
 
-            pos.y = 5;
+            int x = Random.Range(0, EnemySpawns.Count);
 
-            var enemy = Instantiate(LevelGenerator.generator.AvailableEnemies[Random.Range(0, LevelGenerator.generator.AvailableEnemies.Length - 1)].gameObject, pos, Quaternion.identity);
+            pos[i] = EnemySpawns[x].transform;
+
+            EnemySpawns[x].SetActive(true);
+            EnemySpawns[x].GetComponent<ParticleSystem>().Stop();
+            EnemySpawns[x].GetComponent<ParticleSystem>().Play();
+
+            EnemySpawns.Remove(EnemySpawns[x]);
+        }
+
+        yield return new WaitForSeconds(t2);
+
+        for (int i = 0; i < amount; i++)
+        {
+
+            Destroy(pos[i].gameObject);
+
+            var enemy = Instantiate(LevelGenerator.generator.AvailableEnemies[Random.Range(0, LevelGenerator.generator.AvailableEnemies.Length - 1)].gameObject, pos[i].position, Quaternion.identity);
 
             Enemies.Add(enemy);
         }
@@ -165,7 +284,7 @@ public class LevelRoom : MonoBehaviour
 
     public void SpawnEnemies()
     {
-        StartCoroutine(WaitSpawn(1));
+        StartCoroutine(WaitSpawn(1, 2));
     }
 
     public static Vector3 RandomPointInBounds(Bounds bounds)

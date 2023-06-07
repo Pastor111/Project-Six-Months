@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public class WeaponInfo
 {
     public int LeftMag;
@@ -10,7 +11,20 @@ public class WeaponInfo
 
 public class Gun : MonoBehaviour
 {
-    public Weapon currentWeapon;
+    public List<Weapon> weapons;
+    public Weapon currentWeapon
+    {
+        get
+        {
+            return weapons[CurrentGunIndex];
+        }
+    }
+
+    public List<WeaponInfo> mags;
+
+
+    [HideInInspector]
+    public int CurrentGunIndex = 0;
     public Camera MyCamera;
     public PlayerMovement player;
     public LayerMask maskToHit;
@@ -50,7 +64,15 @@ public class Gun : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        SetWeapon(currentWeapon);
+        SetWeapon(0);
+
+        for (int i = 0; i < weapons.Count; i++)
+        {
+            mags.Add(new WeaponInfo());
+            mags[i].LeftMag = weapons[i].Mag;
+            mags[i].LeftTotal = weapons[i].DefaultMaxMag;
+        }
+
     }
 
     // Update is called once per frame
@@ -60,18 +82,25 @@ public class Gun : MonoBehaviour
 
         aimAssistHit = ApplyAimAssist(currentWeapon.KnifeAimAssist);
 
-        if (aimAssistHit.collider != null)
+        if (aimAssistHit.collider != null && currentWeapon.type == Weapon.WeaponType.Melee)
             QuickDraw.DrawCircle(20, 1, aimAssistHit.collider.transform.position, Color.yellow, 0.1f);
 
-        if(currentWeapon.type != Weapon.WeaponType.Melee)
+        if (currentWeapon.type != Weapon.WeaponType.Melee)
             anim.SetBool("Running", player.Running);
+        else
+        {
+            if (thrownKnife != null)
+                anim.SetBool("HasKnife", false);
+            else
+                anim.SetBool("HasKnife", true);
+        }
 
         if (Input.GetKeyDown(KeyCode.Mouse0) && currentWeapon.type == Weapon.WeaponType.SemiAuto)
         {
             TryToShoot();
         }
 
-        if(Input.GetKeyDown(KeyCode.Mouse1) && currentWeapon.type == Weapon.WeaponType.Melee && !anim.GetBool("HasKnife"))
+        if(Input.GetKeyDown(KeyCode.Mouse1) && currentWeapon.type == Weapon.WeaponType.Melee && thrownKnife != null)
         {
             GetBackKnife();
         }
@@ -87,6 +116,28 @@ public class Gun : MonoBehaviour
             TryToShoot();
         }
 
+        if (Input.GetAxis("Mouse ScrollWheel") < 0f) // forward
+        {
+
+
+            ChangeWeapons(1);
+            //if (CurrentGunIndex > weapons.Count)
+            //    SetWeapon(0);
+            //else
+            //    SetWeapon(1);
+
+            //Debug.Log("UP");
+        }
+        if (Input.GetAxis("Mouse ScrollWheel") > 0f) // backwards
+        {
+            //if (CurrentGunIndex < 0)
+            //    SetWeapon(1);
+            //else
+            //    SetWeapon(0);
+
+            //Debug.Log("DOWN");
+            ChangeWeapons(-1);
+        }
 
 
         if (Input.GetKeyDown(KeyCode.R))
@@ -94,7 +145,16 @@ public class Gun : MonoBehaviour
             Reload();
         }
 
-        BulletText.text = $"{CurrentMag} | {TotalMagLeft}";
+        if (currentWeapon.InfiniteAmmo)
+        {
+            BulletText.text = $"{mags[CurrentGunIndex].LeftMag} | {currentWeapon.Mag} (Infinite)";
+
+        }
+        else
+        {
+            BulletText.text = $"{mags[CurrentGunIndex].LeftMag} | {mags[CurrentGunIndex].LeftTotal}";
+
+        }
 
         crosshair.Spread = Mathf.Lerp(crosshair.Spread, 0.0f, SpreadSpeed * Time.deltaTime);
 
@@ -103,6 +163,74 @@ public class Gun : MonoBehaviour
         recoil.recoilZ = currentWeapon.NormalRecoil.z;
 
         crosshair.DefaultSpread = currentWeapon.NormalSpread;
+
+        ShowGunGraphics();
+    }
+
+    public void ThrowWeapon(int i)
+    {
+
+    }
+
+    public void LateUpdate()
+    {
+        ShowGunGraphics();
+    }
+
+    public void ChangeWeapons(int dir)
+    {
+        if (dir == -1)
+        {
+            CurrentGunIndex--;
+
+            if (CurrentGunIndex < 0)
+            {
+                CurrentGunIndex = weapons.Count - 1;
+            }
+
+            SetWeapon(CurrentGunIndex);
+        }
+        else
+        {
+            CurrentGunIndex++;
+
+            if (CurrentGunIndex > weapons.Count - 1)
+            {
+                CurrentGunIndex = 0;
+            }
+
+            SetWeapon(CurrentGunIndex);
+        }
+
+
+        //UpdateGun();
+    }
+
+    public void PickUpWeapon(PickUpGun gun)
+    {
+        weapons.Add(gun.weapon);
+        mags.Add(new WeaponInfo() { LeftMag = gun.LeftAmmo, LeftTotal = gun.MagAmmo });
+    }
+
+    public void ShowGunGraphics()
+    {
+
+        for (int i = 0; i < gunModels.Length; i++)
+        {
+            if (gunModels[i].name == currentWeapon.Name)
+            {
+                gunModels[i].SetActive(true);
+
+                if (currentWeapon.type != Weapon.WeaponType.Melee)
+                    appearPoint = gunModels[i].transform.Find("Appear");
+                else
+                    appearPoint = gunModels[i].transform;
+            }
+            else
+            {
+                gunModels[i].SetActive(false);
+            }
+        }
     }
 
     public void TryToShoot()
@@ -110,7 +238,7 @@ public class Gun : MonoBehaviour
 
         if (currentWeapon.type == Weapon.WeaponType.Melee && currentWeapon.Bullet == null)
             return;
-        else if(currentWeapon.type == Weapon.WeaponType.Melee && currentWeapon.Bullet != null && CanShoot && CurrentMag > 0)
+        else if(currentWeapon.type == Weapon.WeaponType.Melee && currentWeapon.Bullet != null && CanShoot && mags[CurrentGunIndex].LeftMag > 0)
         {
             StartCoroutine(ThrowKnife(currentWeapon.ShootDELAY));
             return;
@@ -121,7 +249,7 @@ public class Gun : MonoBehaviour
             source.PlayOneShot(EmptyMagSound);
         }
 
-        if(CanShoot && CurrentMag > 0 && !player.Running)
+        if(CanShoot && mags[CurrentGunIndex].LeftMag > 0 && !player.Running)
         {
             Shoot();
         }
@@ -161,7 +289,7 @@ public class Gun : MonoBehaviour
             bullet.ShootTransform(hit.point);
         }
 
-        CurrentMag--;
+        mags[CurrentGunIndex].LeftMag--;
         CanShoot = false;
         StartCoroutine(ShootDelay(currentWeapon.FireRate));
         //anim.SetBool("HasKnife", true);
@@ -204,7 +332,7 @@ public class Gun : MonoBehaviour
         Destroy(thrownKnife.gameObject);
         anim.SetBool("Reclaim", false);
         anim.SetBool("HasKnife", true);
-        CurrentMag = 1;
+        mags[CurrentGunIndex].LeftMag = 1;
         CanShoot = true;
     }
 
@@ -218,24 +346,33 @@ public class Gun : MonoBehaviour
     {
         yield return new WaitForSeconds(t);
 
-        if (TotalMagLeft <= currentWeapon.Mag)
+        if (!currentWeapon.InfiniteAmmo)
         {
-            int mag = TotalMagLeft;
-            int add = (mag -= CurrentMag);
-            CurrentMag += add;
-            TotalMagLeft -= TotalMagLeft;
+            var add = currentWeapon.Mag - mags[CurrentGunIndex].LeftMag;
+
+            if (add >= mags[CurrentGunIndex].LeftTotal)
+                add = mags[CurrentGunIndex].LeftTotal;
+
+            mags[CurrentGunIndex].LeftTotal -= add;
+            mags[CurrentGunIndex].LeftMag += add;
+            //int mag2 = currentWeapon.Mag;
+            //TotalMagLeft = mag2;
+            CanShoot = true;
         }
         else
         {
-            int mag = currentWeapon.Mag;
-            int add = (mag -= CurrentMag);
-            CurrentMag += add;
-            TotalMagLeft -= add;
+            var add = currentWeapon.Mag - mags[CurrentGunIndex].LeftMag;
+
+            if (add >= 1000)
+                add = 1000;
+
+            mags[CurrentGunIndex].LeftTotal -= add;
+            mags[CurrentGunIndex].LeftMag += add;
+            //int mag2 = currentWeapon.Mag;
+            //TotalMagLeft = mag2;
+            CanShoot = true;
         }
 
-        int mag2 = currentWeapon.Mag;
-        TotalMagLeft = mag2;
-        CanShoot = true;
     }
 
     public void SetWeapon(Weapon w)
@@ -243,23 +380,39 @@ public class Gun : MonoBehaviour
         CurrentMag = w.Mag;
         TotalMagLeft = w.Mag;
         anim.runtimeAnimatorController = w.animatorController;
+        //currentWeapon = w;
 
-        for (int i = 0; i < gunModels.Length; i++)
-        {
-            if(gunModels[i].name == w.Name)
-            {
-                gunModels[i].SetActive(true);
+        //thrownKnife = null;
 
-                if (currentWeapon.type != Weapon.WeaponType.Melee)
-                    appearPoint = gunModels[i].transform.Find("Appear");
-                else
-                    appearPoint = gunModels[i].transform;
-            }
-            else
-            {
-                gunModels[i].SetActive(false);
-            }
-        }
+    }
+
+    public void SetWeapon(int i)
+    {
+
+        SetWeapon(weapons[i]);
+
+        CurrentGunIndex = i;
+
+        //CurrentMag = w.Mag;
+        //TotalMagLeft = w.Mag;
+        //anim.runtimeAnimatorController = w.animatorController;
+
+        //for (int i = 0; i < gunModels.Length; i++)
+        //{
+        //    if (gunModels[i].name == w.Name)
+        //    {
+        //        gunModels[i].SetActive(true);
+
+        //        if (currentWeapon.type != Weapon.WeaponType.Melee)
+        //            appearPoint = gunModels[i].transform.Find("Appear");
+        //        else
+        //            appearPoint = gunModels[i].transform;
+        //    }
+        //    else
+        //    {
+        //        gunModels[i].SetActive(false);
+        //    }
+        //}
     }
 
     IEnumerator ShootDelay(float t)
@@ -272,7 +425,7 @@ public class Gun : MonoBehaviour
     {
         anim.SetTrigger("Shoot");
 
-        CurrentMag = 0;
+        mags[CurrentGunIndex].LeftMag--;
         CanShoot = false;
         yield return new WaitForSeconds(t);
 

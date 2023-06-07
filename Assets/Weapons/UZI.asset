@@ -14,12 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Name: UZI
   type: 2
+  ShootDELAY: 0
+  KnifeAimAssist: 2
   Bullet: {fileID: 5096237192258325498, guid: 645955a67a087374fa0a7c1c68a0d9ba, type: 3}
   Mag: 15
+  DefaultMaxMag: 0
   FireRate: 0.05
   ReloadTime: 1.4
   ShootingSound: {fileID: 8300000, guid: c47817a0af2bde941bd967494fd04c76, type: 3}
   ReloadSound: {fileID: 8300000, guid: 79a02e6df5fa57a47933d7c1b4d50cbc, type: 3}
+  MinMaxPickUpGunMag: {x: 0, y: 15}
+  MinMaxPickUpGunFullMag: {x: 5, y: 200}
   NormalSpread: 120
   AddSpread: 15
   NormalRecoil: {x: -10, y: 10, z: 0}

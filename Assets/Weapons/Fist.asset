@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1220959abad2dab48af625b1ac5ac828, type: 3}
+  m_Name: Fist
+  m_EditorClassIdentifier: 
+  Name: Fist
+  type: 0
+  ShootDELAY: 0
+  KnifeAimAssist: 2
+  Bullet: {fileID: 0}
+  Mag: 0
+  DefaultMaxMag: 0
+  FireRate: 0
+  ReloadTime: 0
+  ShootingSound: {fileID: 8300000, guid: a1032e31cf3e40045988060f1c3e4b38, type: 3}
+  ReloadSound: {fileID: 0}
+  MinMaxPickUpGunMag: {x: 0, y: 0}
+  MinMaxPickUpGunFullMag: {x: 0, y: 0}
+  NormalSpread: 0
+  AddSpread: 0
+  NormalRecoil: {x: 0, y: 0, z: 0}
+  AimRecoil: {x: 0, y: 0, z: 0}
+  Magnitude: 0
+  Rougness: 0
+  fadeIn: 0
+  fadeout: 0
+  animatorController: {fileID: 9100000, guid: 2dc11075db9014e42887ab25c935d22e, type: 2}

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 [System.Serializable]
 public class Dialogue
@@ -14,6 +15,8 @@ public class DialogueManager : MonoBehaviour
 {
     public Dialogue[] dialogues;
     public float TextSpeed;
+
+    public UnityEvent OnFinishDialogue;
 
     public int current;
     bool isTalking;
@@ -61,9 +64,12 @@ public class DialogueManager : MonoBehaviour
     public void NextDialogue()
     {
 
-        if (current >= dialogues.Length)
+        if (current >= dialogues.Length - 1)
+        {
             EndDialogue();
-
+            OnFinishDialogue.Invoke();
+            return;
+        }
 
         current++;
 
