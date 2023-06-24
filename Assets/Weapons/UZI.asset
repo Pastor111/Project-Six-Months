@@ -14,9 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Name: UZI
   type: 2
+  InfiniteAmmo: 0
   ShootDELAY: 0
   KnifeAimAssist: 2
   Bullet: {fileID: 5096237192258325498, guid: 645955a67a087374fa0a7c1c68a0d9ba, type: 3}
+  Enemy_Bullet: {fileID: 5096237192258325498, guid: b3bd3eb1f216ba34c9031c0672903a2f,
+    type: 3}
   Mag: 15
   DefaultMaxMag: 0
   FireRate: 0.05

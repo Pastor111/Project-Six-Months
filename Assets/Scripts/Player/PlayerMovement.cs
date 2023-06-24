@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -62,6 +63,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("====Audio=====")]
     public AudioClip JumpSounds;
     public AudioClip FootStepSounds;
+    public AudioMixer SoundEffectsMixer;
 
     public static PlayerMovement instance;
 
@@ -151,6 +153,10 @@ public class PlayerMovement : MonoBehaviour
         }
 
 
+        if (transform.position.y >= 20 && lastPos.y < 20)
+            MiniMapManager.GetMiniMap().SetMap(1);
+        else
+            MiniMapManager.GetMiniMap().SetMap(0);
 
 
         //if (Grounded)
@@ -179,7 +185,7 @@ public class PlayerMovement : MonoBehaviour
 
     void OnEnterGround()
     {
-        AudioManager.PlaySound2D(JumpSounds);
+        AudioManager.PlaySound2D(JumpSounds, false, 1, 0, 1, SoundEffectsMixer);
     }
 
     void OnExitGround()
@@ -403,7 +409,7 @@ public class PlayerMovement : MonoBehaviour
     {
         PlayingFootSteps = true;
         yield return new WaitForSeconds(t);
-        AudioManager.PlaySound2D(FootStepSounds, false, 0.5f, 0.0f, UnityEngine.Random.Range(0.9f, 1.1f));
+        AudioManager.PlaySound2D(FootStepSounds, false, 0.5f, 0.0f, UnityEngine.Random.Range(0.9f, 1.1f), SoundEffectsMixer);
         PlayingFootSteps = false;
     }
 

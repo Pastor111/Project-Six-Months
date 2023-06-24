@@ -710,8 +710,10 @@ namespace GridPathFinder
 public class LevelGenerator : MonoBehaviour
 {
     [Header("Settings")]
+    public int NumberOfFloors;
     public int Width;
     public int Height;
+    public Vector2 MinMaxEnemyNumber;
     public GameObject RoomObject;
     public GameObject Path;
     public Vector3 pathOffset;
@@ -720,6 +722,7 @@ public class LevelGenerator : MonoBehaviour
     [Space]
     public Vector3 doorSize;
     public Vector3 doorSize2;
+    public Vector3 ElevatorSize;
     public NavMeshSurface navMesh;
     public EnemyBehaviour[] AvailableEnemies;
     public ItemProbability[] AvailableObjectsToReward;
@@ -738,7 +741,9 @@ public class LevelGenerator : MonoBehaviour
 
     public GameObject Shop;
 
-    public GridPathFinder.Grid grid;
+    //public GridPathFinder.Grid grid_Floor1;
+    //public GridPathFinder.Grid grid_Floor2;
+    public GridPathFinder.Grid[] Floors_Grid;
 
     GridPathFinder.Path path;
 
@@ -756,6 +761,7 @@ public class LevelGenerator : MonoBehaviour
         generator = this;
         AudioManager.Init();
         GetLevel();
+
         //myGridTexture = grid.mapTexture;
         //myGridTexture.SetPixel((int)(FirstRoom.transform.position.x / Spacing), (int)(FirstRoom.transform.position.z / Spacing), Color.green);
         //myGridTexture.SetPixel((int)(LastRoom.transform.position.x / Spacing), (int)(LastRoom.transform.position.z / Spacing), Color.red);
@@ -772,10 +778,7 @@ public class LevelGenerator : MonoBehaviour
         //    GetLevel();
         //}
 
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Debug.Break();
-        }
+
 
         float xPos = PlayerMovement.instance.transform.position.x / (Spacing * SpacingMultiplier);
         float yPos = PlayerMovement.instance.transform.position.z / (Spacing * SpacingMultiplier);
@@ -818,6 +821,35 @@ public class LevelGenerator : MonoBehaviour
         //    }
         //}
 
+
+        var game = FindObjectOfType<GameSettings>();
+
+        if (game.difficulty == GameSettings.GameDifficulty.Easy)
+        {
+            MinMaxEnemyNumber = new Vector2(1, 3);
+        }
+
+
+        if (game.difficulty == GameSettings.GameDifficulty.Medium)
+        {
+            MinMaxEnemyNumber = new Vector2(1, 5);
+        }
+
+
+        if (game.difficulty == GameSettings.GameDifficulty.Hard)
+        {
+            MinMaxEnemyNumber = new Vector2(2, 7);
+        }
+
+#if UNITY_EDITOR
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Debug.Break();
+        }
+#endif
+
+
     }
 
     public void ReloadLevel()
@@ -837,71 +869,149 @@ public class LevelGenerator : MonoBehaviour
     }
     void GetLevel()
     {
+        Floors_Grid = new GridPathFinder.Grid[NumberOfFloors];
+        MiniMapManager.GetMiniMap().maps = new Texture2D[NumberOfFloors];
 
-        MakeGrid();
-
-
-        int startRoom = -1;
-        int lastRoom = 0;
-
-        for (int i = 0; i < grid.cells.Length; i++)
+        for (int i = 0; i < NumberOfFloors; i++)
         {
-            if (grid.cells[i].data == 0)
-            {
-                if(startRoom == -1)
-                    startRoom = i;
+            MakeGrid(out Floors_Grid[i]);
+        }
 
-                lastRoom = i;
+        if (levelParent != null)
+            Destroy(levelParent);
+
+        levelParent = new GameObject("Level");
+
+        int[] starts = new int[NumberOfFloors];
+        int[] ends = new int[NumberOfFloors];
+
+        for (int i = 0; i < NumberOfFloors; i++)
+        {
+            for (int x = 0; x < Floors_Grid[i].cells.Length; x++)
+            {
+                if (Floors_Grid[i].cells[x].data == 0)
+                {
+                    if (starts[i] == -1)
+                        starts[i] = x;
+
+                    ends[i] = x;
+                }
+
             }
 
         }
 
+        bool[] Positive = new bool[NumberOfFloors];
 
-        var canGo = grid.CanGoTo(startRoom, lastRoom, out path);
+        for (int i = 0; i < NumberOfFloors; i++)
+        {
+            Positive[i] = Floors_Grid[i].CanGoTo(starts[i], ends[i], out GridPathFinder.Path p);
+        }
 
-        if (!canGo)
+        bool CanGo = true;
+
+        for (int i = 0; i < Positive.Length; i++)
+        {
+            if (Positive[i] != true)
+            {
+                CanGo = false;
+                break;
+            }
+
+        }
+
+        if (!CanGo)
         {
             MiniMapManager.GetMiniMap().DeleteAllIcons();
             GetLevel();
         }
         else
         {
-
-            for (int i = 0; i < grid.cells.Length; i++)
+            for (int i = 0; i < NumberOfFloors; i++)
             {
-                if(grid.CanGoTo(startRoom, i, out GridPathFinder.Path p))
+                for (int x = 0; x < Floors_Grid[i].cells.Length; x++)
                 {
+                    if(Floors_Grid[i].CanGoTo(starts[i], x, out GridPathFinder.Path p))
+                    {
 
+                    }
+                    else
+                    {
+                        Floors_Grid[i].cells[x].data = 1;
+                        Floors_Grid[i].SetNeightBours();
+                    }
                 }
-                else
-                {
-                    grid.cells[i].data = 1;
-                    grid.SetNeightBours();
-                }
+
             }
 
-            GenerateRooms();
 
-            FirstRoom = levelParent.transform.Find(startRoom.ToString()).gameObject;
-            LastRoom = levelParent.transform.Find(lastRoom.ToString()).gameObject;
+            for (int i = 0; i < NumberOfFloors; i++)
+            {
+                GenerateRooms(Floors_Grid[i], 30 * i, $"Floor {i}", i);
+            }
 
+
+            FirstRoom = levelParent.transform.GetChild(0).transform.GetChild(0).gameObject;
+            LastRoom = levelParent.transform.GetChild(NumberOfFloors - 1).transform.GetChild(levelParent.transform.GetChild(NumberOfFloors - 1).transform.childCount - 1).gameObject;
+
+  
             //StartCoroutine(PlacePlayer());
 
             PlayerMovement.instance.SetPositionInstant(FirstRoom.GetComponent<LevelRoom>().bounds.center);
 
+
+
             PlaceDoors();
+
+
+
+
+            if (NumberOfFloors > 1)
+            {
+
+                for (int i = 0; i < NumberOfFloors - 1; i++)
+                {
+                    for (int x = 0; x < Floors_Grid[i].cells.Length; x++)
+                    {
+                        if (Floors_Grid[i].GetCell(x).data == 0 && Floors_Grid[i + 1].GetCell(x).data == 0)
+                        {
+                            LevelRoom r = levelParent.transform.GetChild(i).transform.Find(x.ToString()).GetComponent<LevelRoom>();
+                            LevelRoom r2 = levelParent.transform.GetChild(i + 1).transform.Find((x).ToString()).GetComponent<LevelRoom>();
+
+                            r.UpperLevel = r2;
+                            r2.SubLevel = r;
+
+                            r.UpdateDoors();
+                            r2.UpdateDoors();
+                        }
+                    }
+                }
+            }
+
+            PlaceElevators();
+
+            PlaceSpecialRoom();
+
+
 
 
             navMesh.BuildNavMesh();
 
-            foreach (Transform child in levelParent.transform)
+            for (int i = 0; i < levelParent.transform.childCount; i++)
             {
-                if (child.name.Contains("Path"))
-                    continue;
+                foreach (Transform child in levelParent.transform.GetChild(i).transform)
+                {
+                    if (child.name.Contains("Path"))
+                        continue;
 
-                LevelRoom r = child.GetComponent<LevelRoom>();
+                    LevelRoom r = child.GetComponent<LevelRoom>();
 
-                r.CanSpawnEnemies = true;
+                    if (r == null)
+                        continue;
+
+                    r.CanSpawnEnemies = true;
+                }
+
             }
 
 
@@ -913,51 +1023,179 @@ public class LevelGenerator : MonoBehaviour
         //UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
     }
 
+    public GameObject GetRoomInFloor(int floor, int roomID)
+    {
+
+        return levelParent.transform.GetChild(floor).Find(roomID.ToString()).gameObject;
+    }
+
     //IEnumerator PlacePlayer()
     //{
 
 
     //}
 
-    void PlaceDoors()
+    void PlaceSpecialRoom()
     {
-        foreach (Transform child in levelParent.transform)
+        #region Store
+        int floor = Random.Range(0, NumberOfFloors);
+
+        bool hasStoreRoom = false;
+        while(hasStoreRoom == false)
         {
-            if (child.name.Contains("Path"))
-                return;
+            int i = Random.Range(0, Floors_Grid[floor].cells.Length);
 
-            LevelRoom r = child.GetComponent<LevelRoom>();
-
-            if(r.transform == FirstRoom.transform)
+            if(Floors_Grid[floor].GetCell(i).data != 1)
             {
-                r.ForceLayout(0);
+                var r = GetRoomInFloor(floor, i).GetComponent<LevelRoom>();
+                r.roomType = LevelRoom.RoomType.Store;
+
+                Instantiate(Shop, r.GetFreePosition(), Shop.transform.rotation, r.transform);
+
+                Debug.Log($"Store is in floor {floor} in the room number {i}");
+
+                hasStoreRoom = true;
             }
+        }
+        #endregion
 
-            r.ChooseLevelLayout();
+        #region Elevator
+        //floor = Random.Range(0, NumberOfFloors);
 
-            //var cell = grid.GetCell(int.Parse(child.name));
+        floor = 0;
 
-            if(r.Left != null)
+        bool hasElevatorRoom = false;
+        while (hasElevatorRoom == false)
+        {
+            int i = Random.Range(0, Floors_Grid[floor].cells.Length);
+
+            if (Floors_Grid[floor].GetCell(i).data != 1)
             {
-                var pos = QuickDraw.MidPointVec3(r.LeftWall.transform.position, r.Left.RightWall.transform.position);
-                var bounds = QuickDraw.JoinBounds(new Bounds(r.LeftWall.transform.position, doorSize), new Bounds(r.Left.RightWall.transform.position, doorSize));
-                var p = Instantiate(Path, pos - pathOffset, Quaternion.Euler(0, 0, 0), levelParent.transform);
-                p.transform.localScale = bounds.size;
 
-            }
+                var r = GetRoomInFloor(floor, i).GetComponent<LevelRoom>();
+                if(r.roomType == LevelRoom.RoomType.Normal && r.UpperLevel != null)
+                {
+                    r.roomType = LevelRoom.RoomType.Elevator;
 
-            if (r.Top != null)
-            {
-                var pos = QuickDraw.MidPointVec3(r.TopWall.transform.position, r.Top.BottomWall.transform.position);
-                var bounds = QuickDraw.JoinBounds(new Bounds(r.TopWall.transform.position, doorSize2), new Bounds(r.Top.BottomWall.transform.position, doorSize2));
-                var p = Instantiate(Path, pos - pathOffset, Quaternion.Euler(0, 90, 0), levelParent.transform);
-                p.transform.localScale = bounds.size;
+                    Debug.Log($"Store is in Elevator {floor} in the room number {i}");
+
+                    hasElevatorRoom = true;
+                }
 
             }
         }
+        #endregion
+
     }
 
-    public void MakeGrid()
+    void PlaceDoors()
+    {
+
+        for (int i = 0; i < levelParent.transform.childCount; i++)
+        {
+
+            foreach (Transform child in levelParent.transform.GetChild(i))
+            {
+                if (child.name.Contains("Path"))
+                    return;
+
+                LevelRoom r = child.GetComponent<LevelRoom>();
+
+                if (r == null)
+                    continue;
+
+                if (FirstRoom == null)
+                    Debug.Log("NULL");
+
+
+                if (r.transform == FirstRoom.transform)
+                {
+                    r.ForceLayout(0);
+                }
+
+
+                r.ChooseLevelLayout();
+
+                //var cell = grid.GetCell(int.Parse(child.name));
+
+                if (r.Left != null)
+                {
+                    var pos = QuickDraw.MidPointVec3(r.LeftWall.transform.position, r.Left.RightWall.transform.position);
+                    var bounds = QuickDraw.JoinBounds(new Bounds(r.LeftWall.transform.position, doorSize), new Bounds(r.Left.RightWall.transform.position, doorSize));
+                    var p = Instantiate(Path, pos - pathOffset, Quaternion.Euler(0, 0, 0), levelParent.transform);
+                    p.transform.localScale = doorSize;
+
+                }
+
+                if (r.Top != null)
+                {
+                    var pos = QuickDraw.MidPointVec3(r.TopWall.transform.position, r.Top.BottomWall.transform.position);
+                    var bounds = QuickDraw.JoinBounds(new Bounds(r.TopWall.transform.position, doorSize2), new Bounds(r.Top.BottomWall.transform.position, doorSize2));
+                    var p = Instantiate(Path, pos - pathOffset, Quaternion.Euler(0, 90, 0), levelParent.transform);
+                    p.transform.localScale = doorSize2;
+
+                }
+
+                if (r.UpperLevel != null)
+                {
+                    var pos = QuickDraw.MidPointVec3(r.Ceiling.transform.position, r.UpperLevel.Floor.transform.position);
+                    var bounds = QuickDraw.JoinBounds(new Bounds(r.Ceiling.transform.position, doorSize), new Bounds(r.UpperLevel.Floor.transform.position, doorSize));
+                    var p = Instantiate(Path, pos - pathOffset, Quaternion.Euler(0, 0, 0), levelParent.transform);
+                    p.transform.localScale = bounds.size;
+
+                }
+
+            }
+        }
+
+    }
+
+    void PlaceElevators()
+    {
+
+        for (int i = 0; i < levelParent.transform.childCount; i++)
+        {
+
+            foreach (Transform child in levelParent.transform.GetChild(i))
+            {
+                if (child.name.Contains("Path"))
+                    return;
+
+                LevelRoom r = child.GetComponent<LevelRoom>();
+
+                if (r == null)
+                    continue;
+
+                if (FirstRoom == null)
+                    return;
+
+
+                if (r.transform == FirstRoom.transform)
+                {
+                    r.ForceLayout(0);
+                }
+
+
+                //r.ChooseLevelLayout();
+
+                //var cell = grid.GetCell(int.Parse(child.name));
+
+
+                if (r.UpperLevel != null)
+                {
+                    var pos = QuickDraw.MidPointVec3(r.Ceiling.transform.position, r.UpperLevel.Floor.transform.position);
+                    //var bounds = QuickDraw.JoinBounds(new Bounds(r.Ceiling.transform.position, doorSize), new Bounds(r.UpperLevel.Floor.transform.position, doorSize));
+                    var p = Instantiate(Path, pos - pathOffset, Quaternion.Euler(90, 0, 0), levelParent.transform);
+                    p.transform.localScale = ElevatorSize;
+
+                }
+
+            }
+        }
+
+    }
+
+    public void MakeGrid(out GridPathFinder.Grid grid)
     {
         grid = new GridPathFinder.Grid(Width, Height);
 
@@ -985,18 +1223,17 @@ public class LevelGenerator : MonoBehaviour
         grid.SetNeightBours();
     }
 
-    void GenerateRooms()
+    void GenerateRooms(GridPathFinder.Grid grid, float level, string ParentName, int mapNumber)
     {
       
 
-        if (levelParent != null)
-            Destroy(levelParent);
+ 
+        var parent = new GameObject(ParentName);
 
-        levelParent = new GameObject("Level");
-        //var extra = new GameObject("Level_Extra");
+        parent.transform.parent = levelParent.transform;
 
         nextPoints = new List<Vector3>();
-        var extra = new List<GameObject>();
+        //var extra = new List<GameObject>();
 
         int a = 0;
         for (int x = 0; x < Width; x++)
@@ -1007,13 +1244,13 @@ public class LevelGenerator : MonoBehaviour
                 if(grid.cells[a].data == 0)
                 {
 
-                    var room = Instantiate(RoomObject, levelParent.transform);
+                    var room = Instantiate(RoomObject, parent.transform);
 
                     room.gameObject.name = (a).ToString();
 
-                    room.transform.position = new Vector3(x * Spacing, 0, y * Spacing);
+                    room.transform.position = new Vector3(x * Spacing, level, y * Spacing);
 
-                    room.transform.parent = levelParent.transform;
+                    room.transform.parent = parent.transform;
                     if (FirstRoom == null)
                         FirstRoom = room;
 
@@ -1031,31 +1268,32 @@ public class LevelGenerator : MonoBehaviour
         }
 
 
-        bool storeSet = false;
+        //bool storeSet = false;
 
-        while (!storeSet)
-        {
-            int x = Random.Range(0, Width * Height);
+        //while (!storeSet)
+        //{
+        //    int x = Random.Range(0, Width * Height);
 
-            if (x != 0 && grid.GetCell(x).data == 0)
-            {
-                //grid.SetData(x, 2);
-                LevelRoom r = GameObject.Find(x.ToString()).GetComponent<LevelRoom>();
-                Instantiate(Shop, r.GetFreePosition(), Shop.transform.rotation, r.transform);
-                storeSet = true;
-                Debug.Log($"Store is in room {x}");
-                Debug.Log($"Store is in room {x}");
-            }
+        //    if (x != 0 && grid.GetCell(x).data == 0)
+        //    {
+        //        //grid.SetData(x, 2);
+        //        LevelRoom r = parent.transform.Find(x.ToString()).GetComponent<LevelRoom>();
+        //        Instantiate(Shop, r.GetFreePosition(), Shop.transform.rotation, r.transform);
+        //        storeSet = true;
+        //        Debug.Log($"Store is in room {x}");
+        //        Debug.Log($"Store is in room {x}");
+        //    }
 
-        }
+        //}
 
         grid.SetNeightBours();
         //levelParent.transform.GetChild(0).GetComponent<MeshRenderer>().material.color = Color.green;
         //levelParent.transform.GetChild(levelParent.transform.childCount - 1).GetComponent<MeshRenderer>().material.color = Color.red;
 
-        foreach (Transform child in levelParent.transform)
+        foreach (Transform child in parent.transform)
         {
             LevelRoom r = child.GetComponent<LevelRoom>();
+            r.roomType = LevelRoom.RoomType.Normal;
             r.GenerateBounds();
 
             var cell = grid.GetCell(int.Parse(child.name));
@@ -1064,25 +1302,25 @@ public class LevelGenerator : MonoBehaviour
 
             if(cell.TopNeighBour != null && cell.TopNeighBour.data == 0)
             {
-                r.Top = GameObject.Find(cell.TopNeighBour.ID.ToString()).GetComponent<LevelRoom>();
+                r.Top = parent.transform.Find(cell.TopNeighBour.ID.ToString()).GetComponent<LevelRoom>();
                 exits.Add(LevelRoom.Exit.Top);
             }
 
             if (cell.BottomNeighBour != null && cell.BottomNeighBour.data == 0)
             {
-                r.Bottom = GameObject.Find(cell.BottomNeighBour.ID.ToString()).GetComponent<LevelRoom>();
+                r.Bottom = parent.transform.Find(cell.BottomNeighBour.ID.ToString()).GetComponent<LevelRoom>();
                 exits.Add(LevelRoom.Exit.Bottom);
             }
 
             if (cell.LeftNeighBour != null && cell.LeftNeighBour.data == 0)
             {
-                r.Left = GameObject.Find(cell.LeftNeighBour.ID.ToString()).GetComponent<LevelRoom>();
+                r.Left = parent.transform.Find(cell.LeftNeighBour.ID.ToString()).GetComponent<LevelRoom>();
                 exits.Add(LevelRoom.Exit.Left);
             }
 
             if (cell.RightNeighBour != null && cell.RightNeighBour.data == 0)
             {
-                r.Right = GameObject.Find(cell.RightNeighBour.ID.ToString()).GetComponent<LevelRoom>();
+                r.Right = parent.transform.Find(cell.RightNeighBour.ID.ToString()).GetComponent<LevelRoom>();
                 exits.Add(LevelRoom.Exit.Right);
             }
 
@@ -1097,7 +1335,7 @@ public class LevelGenerator : MonoBehaviour
         //}
 
         //map = grid.mapTexture;
-        GetComponent<MiniMapManager>().GenerateMiniMap(grid);
+        GetComponent<MiniMapManager>().GenerateMiniMap(grid, mapNumber);
     }
 
     private void OnDrawGizmos()

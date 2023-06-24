@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7074935346343116116}
   - component: {fileID: 7074935346343116126}
   - component: {fileID: 7074935346343116121}
-  - component: {fileID: 7074935346343116120}
+  - component: {fileID: 8953059503865022940}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Enemy
@@ -138,7 +138,7 @@ NavMeshAgent:
   m_BaseOffset: 0.5
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &7074935346343116120
+--- !u!114 &8953059503865022940
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -147,11 +147,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 7074935346343116119}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7e7679d24fed1084382ef59cea9ced18, type: 3}
+  m_Script: {fileID: 11500000, guid: 688fe4584aa22934e981ba3fa14f6593, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Life: 3
   agent: {fileID: 7074935346343116121}
+  Gold: {fileID: 111529979060830219, guid: 36e97de1123f8b04f9955111337a7da9, type: 3}
+  GoldGive: {x: 1, y: 3}
+  SoundEffectsMixer: {fileID: 24100000, guid: f0fb3a1efc78c9447a7531e99f21c24d, type: 2}
   DamageColor: {r: 1, g: 1, b: 1, a: 1}
   DeathParticles: {fileID: 8752029651713637104, guid: 7bc4bc485a590a64ea7fba66311033c5,
     type: 3}

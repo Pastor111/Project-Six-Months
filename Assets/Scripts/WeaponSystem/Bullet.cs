@@ -47,11 +47,21 @@ public class Bullet : MonoBehaviour
         {
             transform.position = hit.point;
 
+            if (hit.transform == Owner.transform)
+                return;
+
             if (hit.collider.GetComponent<EnemyBehaviour>())
             {
                 EnemyBehaviour enemy = hit.collider.GetComponent<EnemyBehaviour>();
                 enemy.OnBulletCollide(this);
             }
+
+            if (hit.collider.GetComponent<Player>())
+            {
+                Player player = hit.collider.GetComponent<Player>();
+                player.GetDamage(5);
+            }
+            
 
             //Debug.Log(hit.transform.name);
             Destroy(gameObject);

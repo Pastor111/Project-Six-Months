@@ -7,6 +7,8 @@ public class MiniMapManager : MonoBehaviour
 {
     public Image MiniMap;
 
+    public Texture2D[] maps;
+
     public Texture2D ChestIcon;
     public Texture2D InteractionIcon;
     public Texture2D KeyIcon;
@@ -30,7 +32,12 @@ public class MiniMapManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+      
+    }
+
+    public void SetMap(int i)
+    {
+        MiniMap.sprite = Sprite.Create(maps[i], new Rect(0, 0, maps[i].width, maps[i].height), new Vector2(0, 0));
     }
 
     public void ChangeRoomColor(Texture2D t,int x, int y, Color color)
@@ -103,7 +110,7 @@ public class MiniMapManager : MonoBehaviour
         }
     }
 
-    public void GenerateMiniMap(GridPathFinder.Grid grid)
+    public void GenerateMiniMap(GridPathFinder.Grid grid, int mapNumber)
     {
         var t = new Texture2D(grid.Width * 4 + 1, grid.Height * 4 + 1);
         t.filterMode = FilterMode.Point;
@@ -189,6 +196,8 @@ public class MiniMapManager : MonoBehaviour
 
         t.Apply();
 
+        maps[mapNumber] = t;
+
         //System.IO.File.WriteAllBytes(Application.dataPath + "/Level.png", t.EncodeToPNG());
 
         //myGridTexture.SetPixel((int)(FirstRoom.transform.position.x / Spacing), (int)(FirstRoom.transform.position.z / Spacing), Color.green);
@@ -196,8 +205,9 @@ public class MiniMapManager : MonoBehaviour
 
 
 
-        MiniMap.sprite = Sprite.Create(t, new Rect(0, 0, t.width,t.height), new Vector2(0, 0));
+    
     }
+
 
     public Vector2 WorldPositionToRoom(Vector3 pos)
     {

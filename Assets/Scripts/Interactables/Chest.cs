@@ -12,6 +12,7 @@ public class ItemProbability
 public class Chest : MonoBehaviour
 {
     public bool IsOpenned = false;
+    public UnityEngine.Audio.AudioMixer SoundEffectMixer;
 
     public Interactable interactable;
     public enum ChestType {Bad, Normal, Special}
@@ -82,7 +83,7 @@ public class Chest : MonoBehaviour
             Player.instance.Keys--;
         }
 
-        AudioManager.PlaySound2D(OpenChest);
+        AudioManager.PlaySound2D(OpenChest, false, 1.0f, 0, 1, SoundEffectMixer);
         IsOpenned = true;
         Destroy(interactable);
 

@@ -2,60 +2,52 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Audio;
 
 public class EnemyBehaviour : MonoBehaviour
 {
     public float Life;
 
     public NavMeshAgent agent;
-    public Color DamageColor;
-    public GameObject DeathParticles;
-    Transform target;
+
+    protected Transform target;
+
+    public GameObject Gold;
+
+    public Vector2 GoldGive;
 
 
-    Color startColor;
+    protected Color startColor;
+
+    public AudioMixer SoundEffectsMixer;
 
     // Start is called before the first frame update
     void Start()
     {
-        target = FindObjectOfType<PlayerMovement>().transform;
-        startColor = GetComponent<Renderer>().material.color;
+       
     }
 
     // Update is called once per frame
     void Update()
     {
-        agent.SetDestination(target.position);
+        
     }
 
-    public void OnBulletCollide(Bullet bullet)
+    public virtual void OnBulletCollide(Bullet bullet)
     {
-        Life--;
-
-        GetComponent<Renderer>().material.color = DamageColor;
-        StartCoroutine(ShowDamage(0.2f));
-
-
-        if (Life <= 0)
-        {
-            FindObjectOfType<Gun>().ShowHitMarker(Color.red);
-            Die();
-        }
-        else
-        {
-            FindObjectOfType<Gun>().ShowHitMarker(Color.black);
-        }
 
     }
 
-    public void OnKnifeCollide(Knife knife, int damage)
+    public virtual void OnKnifeCollide(Knife knife, int damage)
+    {
+
+
+    }
+
+    public virtual void GetDamage(int damage)
     {
         Life -= damage;
 
-        GetComponent<Renderer>().material.color = DamageColor;
-        StartCoroutine(ShowDamage(0.2f));
-
-
         if (Life <= 0)
         {
             FindObjectOfType<Gun>().ShowHitMarker(Color.red);
@@ -68,21 +60,20 @@ public class EnemyBehaviour : MonoBehaviour
 
     }
 
-    public void Die()
+    public virtual void Die()
     {
-        Destroy(gameObject);
-        Instantiate(DeathParticles, transform.position, Quaternion.identity);
-    }
+        int coins = Random.Range((int)GoldGive.x, (int)GoldGive.y);
 
-    public void OnCollisionEnter(Collision collision)
-    {
-        if(collision.collider.transform == Player.instance.transform)
+        for (int i = 0; i < coins; i++)
         {
-            Player.instance.GetDamage();
+            Vector3 pos = transform.position + (Random.insideUnitSphere * 2f);
+            pos.y = transform.position.y;
+            Instantiate(Gold, pos, Quaternion.identity);
         }
     }
 
-    IEnumerator ShowDamage(float t)
+
+    public virtual IEnumerator ShowDamage(float t)
     {
         yield return new WaitForSeconds(t);
         GetComponent<Renderer>().material.color = startColor;

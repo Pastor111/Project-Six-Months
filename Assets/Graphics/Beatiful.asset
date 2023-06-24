@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 485dccdd579b5e2479632cf8a40d77bd, type: 3}
+  m_Name: Beatiful
+  m_EditorClassIdentifier: 
+  Name: Beatiful
+  ResolutionScale: 1
+  EnableShadows: 1
+  shadowQuality: 4
+  shadowQuality_additional_Lights: 4
+  ShadowDistance: 150
+  textureQuality: 0
+  PostProcessing: 1
+  Bloom: 1
+  Vignette: 1
+  DepthOfField: 1
+  FXAA: 1
+  AO: 0
+  HighQualityFXAA: 1
+  SoftShadows: 1

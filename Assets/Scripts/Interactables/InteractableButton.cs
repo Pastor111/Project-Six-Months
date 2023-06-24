@@ -21,16 +21,15 @@ public class InteractableButton : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (Active)
+            renderer.material.color = ActiveColor;
+        else
+            renderer.material.color = DeactiveColor;
+
     }
 
     public void Interact()
     {
         Active = !Active;
-
-        if (Active)
-            renderer.material.color = ActiveColor;
-        else
-            renderer.material.color = DeactiveColor;
     }
 }

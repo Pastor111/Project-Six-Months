@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3141684644786158790}
   - component: {fileID: 900006084374677516}
   - component: {fileID: 5487733299483670043}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: Muzzle
   m_TagString: Untagged
   m_Icon: {fileID: 0}

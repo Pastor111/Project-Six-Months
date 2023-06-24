@@ -329,6 +329,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   IsOpenned: 0
+  SoundEffectMixer: {fileID: 24100000, guid: f0fb3a1efc78c9447a7531e99f21c24d, type: 2}
   interactable: {fileID: 6428863853151446452}
   type: 2
   ClosedObj: {fileID: 6428863852860340360}

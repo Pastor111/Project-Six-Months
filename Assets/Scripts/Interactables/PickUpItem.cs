@@ -7,7 +7,7 @@ public class PickUpItem : MonoBehaviour
     public Vector3 Rotation;
     public int AmountToFill;
     public float MovementAmplitude;
-    public enum Fill {Health, Bullets, Keys}
+    public enum Fill {Health, Bullets, Keys, Coins}
     public Fill fill;
     public enum Quality {Low, Medium, High}
     public Quality quality;
@@ -41,6 +41,11 @@ public class PickUpItem : MonoBehaviour
             {
                 Player.instance.Keys++;
                 Player.instance.ShowNotification(2.5f, $"Keys +{1}");
+            }
+            else if(fill == Fill.Coins)
+            {
+                Player.instance.SetGold(Player.instance.GetGold() + 1);
+                Player.instance.ShowNotification(2.5f, $"Gold +{1}");
             }
             else
             {

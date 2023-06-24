@@ -269,6 +269,7 @@ public class Gun : MonoBehaviour
         var bullet = Instantiate(currentWeapon.Bullet, appearPoint.position, Quaternion.identity).GetComponent<Bullet>();
         var muzzle = Instantiate(Muzzle, appearPoint.position, appearPoint.rotation).GetComponent<Muzzle>();
 
+        bullet.Owner = gameObject;
         source.PlayOneShot(currentWeapon.ShootingSound);
 
         EZCameraShake.CameraShaker.Instance.ShakeOnce(currentWeapon.Magnitude, currentWeapon.Rougness, currentWeapon.fadeIn, currentWeapon.fadeout);

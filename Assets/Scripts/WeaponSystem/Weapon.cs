@@ -13,8 +13,10 @@ public class Weapon : ScriptableObject
     public float ShootDELAY;
     public float KnifeAimAssist = 2;
     public GameObject Bullet;
+    public GameObject Enemy_Bullet;
     public int Mag;
     public int DefaultMaxMag;
+
 
     public float FireRate;
     public float ReloadTime;

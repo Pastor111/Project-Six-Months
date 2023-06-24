@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.Audio;
 
 public class Player : MonoBehaviour
 {
@@ -52,6 +53,7 @@ public class Player : MonoBehaviour
     public CameraController cam;
     public Gun gun;
     public static Player instance;
+    public AudioMixer SoundEffectsMixer;
     [Space]
     [Space]
     [Space]
@@ -116,6 +118,7 @@ public class Player : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.I))
             {
+           
                 intRequest.Interact();
             }
         }
@@ -320,7 +323,7 @@ public class Player : MonoBehaviour
     {
 
         if (newGold >= m_gold)
-            AudioManager.PlaySound2D(GainGold);
+            AudioManager.PlaySound2D(GainGold, false, 1, 0, 1, SoundEffectsMixer);
         else
             AudioManager.PlaySound2D(BuyItem);
 
