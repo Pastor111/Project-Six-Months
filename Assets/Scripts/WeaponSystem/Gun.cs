@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MyInputSystem;
 
 [System.Serializable]
 public class WeaponInfo
@@ -28,6 +29,7 @@ public class Gun : MonoBehaviour
     public Camera MyCamera;
     public PlayerMovement player;
     public LayerMask maskToHit;
+    public float GamePadAiAssist;
     [Space]
     [Space]
     [Space]
@@ -59,6 +61,8 @@ public class Gun : MonoBehaviour
     RaycastHit aimAssistHit;
     Knife thrownKnife;
 
+    float LeftTrigger;
+    float RightTrigger;
     #endregion
 
     // Start is called before the first frame update
@@ -80,7 +84,10 @@ public class Gun : MonoBehaviour
     {
         ray = MyCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
 
-        aimAssistHit = ApplyAimAssist(currentWeapon.KnifeAimAssist);
+        if (GamePadInput.IsAnyControllerConnected)
+            GamePadAiAssist = 5f;
+
+        aimAssistHit = ApplyAimAssist(GamePadAiAssist);
 
         if (aimAssistHit.collider != null && currentWeapon.type == Weapon.WeaponType.Melee)
             QuickDraw.DrawCircle(20, 1, aimAssistHit.collider.transform.position, Color.yellow, 0.1f);
@@ -95,7 +102,7 @@ public class Gun : MonoBehaviour
                 anim.SetBool("HasKnife", true);
         }
 
-        if (Input.GetKeyDown(KeyCode.Mouse0) && currentWeapon.type == Weapon.WeaponType.SemiAuto)
+        if ((Input.GetKeyDown(KeyCode.Mouse0) || (RightTrigger <= .5f && GamePadInput.GetRightTrigger() >= .5f)) && currentWeapon.type == Weapon.WeaponType.SemiAuto)
         {
             TryToShoot();
         }
@@ -106,12 +113,12 @@ public class Gun : MonoBehaviour
         }
 
 
-        if (Input.GetKey(KeyCode.Mouse0) && currentWeapon.type == Weapon.WeaponType.FullAuto)
+        if ((Input.GetKey(KeyCode.Mouse0) || GamePadInput.GetRightTrigger() >= .5f) && currentWeapon.type == Weapon.WeaponType.FullAuto)
         {
             TryToShoot();
         }
 
-        if (Input.GetKeyDown(KeyCode.Mouse0) && currentWeapon.type == Weapon.WeaponType.Melee)
+        if ((Input.GetKeyDown(KeyCode.Mouse0) || (RightTrigger <= .5f && GamePadInput.GetRightTrigger() >= .5f)) && currentWeapon.type == Weapon.WeaponType.Melee)
         {
             TryToShoot();
         }
@@ -139,8 +146,13 @@ public class Gun : MonoBehaviour
             ChangeWeapons(-1);
         }
 
+        if(GamePadInput.IsControllerButtonPressed(GamePadButton.Y, GamepadNumber.Gamepad01))
+        {
+            ChangeWeapons(1);
+        }
 
-        if (Input.GetKeyDown(KeyCode.R))
+
+        if (Input.GetKeyDown(KeyCode.R) || GamePadInput.IsControllerButtonPressed(GamePadButton.X))
         {
             Reload();
         }
@@ -165,6 +177,9 @@ public class Gun : MonoBehaviour
         crosshair.DefaultSpread = currentWeapon.NormalSpread;
 
         ShowGunGraphics();
+
+        LeftTrigger = GamePadInput.GetLeftTrigger();
+        RightTrigger = GamePadInput.GetRightTrigger();
     }
 
     public void ThrowWeapon(int i)
@@ -252,6 +267,7 @@ public class Gun : MonoBehaviour
         if(CanShoot && mags[CurrentGunIndex].LeftMag > 0 && !player.Running)
         {
             Shoot();
+            GamePadInput.VibrateController(GamepadNumber.Gamepad01, this);
         }
 
 
@@ -281,14 +297,36 @@ public class Gun : MonoBehaviour
 
         Physics.Raycast(ray, out RaycastHit hit);
 
-        if(hit.collider == null)
+        if (GamePadInput.IsAnyControllerConnected)
         {
-            bullet.ShootRb(ray.direction);
+            if (aimAssistHit.collider == null)
+            {
+                if (hit.collider == null)
+                {
+                    bullet.ShootRb(ray.direction);
+                }
+                else
+                {
+                    bullet.ShootTransform(hit.point);
+                }
+            }
+            else
+            {
+                bullet.ShootTransform(aimAssistHit.point);
+            }
         }
         else
         {
-            bullet.ShootTransform(hit.point);
+            if (hit.collider == null)
+            {
+                bullet.ShootRb(ray.direction);
+            }
+            else
+            {
+                bullet.ShootTransform(hit.point);
+            }
         }
+
 
         mags[CurrentGunIndex].LeftMag--;
         CanShoot = false;
@@ -306,6 +344,7 @@ public class Gun : MonoBehaviour
         CanShoot = false;
         anim.SetTrigger("Reload");
         source.PlayOneShot(currentWeapon.ReloadSound);
+        GamePadInput.VibrateController(GamepadNumber.Gamepad01, this, 0.4f, 0.4f);
         StartCoroutine(WaitReload(currentWeapon.ReloadTime));
     }
 

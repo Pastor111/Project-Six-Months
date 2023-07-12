@@ -15,58 +15,72 @@ public class Chest : MonoBehaviour
     public UnityEngine.Audio.AudioMixer SoundEffectMixer;
 
     public Interactable interactable;
+    public GameObject Lock;
     public enum ChestType {Bad, Normal, Special}
     public ChestType type;
-    public GameObject ClosedObj;
-    public GameObject OpennedObj;
+    public Animator anim;
     public Transform AppearPoint;
     public ItemProbability[] ObjectsToSpawn;
+    public GameObject Gold;
     public GameObject Icon;
     public AudioClip OpenChest;
     //public Vector3 PushForce;
 
     public Vector2 MinMaxGold;
 
-    Renderer[] renderers;
+    //Renderer[] renderers;
 
     // Start is called before the first frame update
     void Start()
     {
-        renderers = transform.GetComponentsInChildren<Renderer>();
+        //renderers = transform.GetComponentsInChildren<Renderer>();
 
-        if (type == ChestType.Bad)
-        {
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                if (renderers[i].material.color.a == 1)
-                    renderers[i].material.color = Color.green;
-            }
-        }
-        else if (type == ChestType.Normal)
-        {
-            for (int i = 0; i < renderers.Length; i++)
-            {
+        //if (type == ChestType.Bad)
+        //{
+        //    for (int i = 0; i < renderers.Length; i++)
+        //    {
+        //        if (renderers[i].material.color.a == 1)
+        //            renderers[i].material.color = Color.green;
+        //    }
+        //}
+        //else if (type == ChestType.Normal)
+        //{
+        //    for (int i = 0; i < renderers.Length; i++)
+        //    {
 
-                if(renderers[i].material.color.a == 1)
-                    renderers[i].material.color = Color.yellow;
-            }
-        }
-        else
-        {
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                if (renderers[i].material.color.a == 1)
-                    renderers[i].material.color = Color.red;
-            }
-        }
+        //        if(renderers[i].material.color.a == 1)
+        //            renderers[i].material.color = Color.yellow;
+        //    }
+        //}
+        //else
+        //{
+        //    for (int i = 0; i < renderers.Length; i++)
+        //    {
+        //        if (renderers[i].material.color.a == 1)
+        //            renderers[i].material.color = Color.red;
+        //    }
+        //}
     }
 
     // Update is called once per frame
     void Update()
     {
-        OpennedObj.SetActive(IsOpenned);
-        ClosedObj.SetActive(!IsOpenned);
+        anim.SetBool("Open", IsOpenned);
 
+        if(type == ChestType.Special)
+        {
+            Lock.SetActive(true);
+
+            if (IsOpenned)
+            {
+                Lock.GetComponent<Rigidbody>().useGravity = true;
+                Lock.GetComponent<Rigidbody>().isKinematic = false;
+            }
+        }
+        else
+        {
+            Lock.SetActive(false);
+        }
 
     }
 
@@ -88,7 +102,7 @@ public class Chest : MonoBehaviour
         Destroy(interactable);
 
         gameObject.layer = LayerMask.NameToLayer("Default");
-        Destroy(gameObject);
+        //Destroy(gameObject);
         Destroy(Icon.gameObject);
         GrantReward();
 
@@ -98,17 +112,18 @@ public class Chest : MonoBehaviour
     {
         int i = Random.Range(0, 4);
 
-        if(i == 0)
+        if(i <= 1)
         {
             int plus = (int)Random.Range(MinMaxGold.x, MinMaxGold.y);
-            Player.instance.SetGold(Player.instance.GetGold() + plus);
-            Player.instance.ShowNotification(2f, $"Gold +{plus}");
+            //Player.instance.SetGold(Player.instance.GetGold() + plus);
+            //Player.instance.ShowNotification(2f, $"Gold +{plus}");
+            StartCoroutine(GiveMoney(plus, 0.1f));
         }
-        else if(i == 1)
-        {
-            Player.instance.Keys++;
-            Player.instance.ShowNotification(2f, $"Key +{1}");
-        }
+        //else if(i == 1)
+        //{
+        //    Player.instance.Keys++;
+        //    Player.instance.ShowNotification(2f, $"Key +{1}");
+        //}
         else
         {
             //Player.instance.;
@@ -119,7 +134,7 @@ public class Chest : MonoBehaviour
             {
                 if(x >= item.Probability.x && x <= item.Probability.y)
                 {
-                    Instantiate(item.obj, transform.position, item.obj.transform.localRotation);
+                    Instantiate(item.obj, AppearPoint.position, item.obj.transform.localRotation);
                 }
             }
 
@@ -131,5 +146,21 @@ public class Chest : MonoBehaviour
             //}
         }
 
+    }
+
+    IEnumerator GiveMoney(int amount, float t)
+    {
+        int i = 0;
+
+        while(i < amount)
+        {
+            var c = Instantiate(Gold, AppearPoint.position, Quaternion.identity);
+
+            transform.parent.GetComponent<LevelRoom>().Coins.Add(c.GetComponent<PickUpItem>());
+
+            i++;
+
+            yield return new WaitForSeconds(t);
+        }
     }
 }

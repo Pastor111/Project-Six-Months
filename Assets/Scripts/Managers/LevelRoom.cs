@@ -45,6 +45,11 @@ public class LevelRoom : MonoBehaviour
     public LevelRoom Left;
     public LevelRoom Right;
 
+    public List<PickUpItem> Coins;
+
+
+    public List<GameObject> _Paths;
+
     public List<GameObject> Doors;
     public List<GameObject> Enemies;
 
@@ -82,11 +87,30 @@ public class LevelRoom : MonoBehaviour
 
     public void GenerateBounds()
     {
-        var b1 = QuickDraw.JoinBounds(LeftWall.GetComponent<Renderer>().bounds, RightWall.GetComponent<Renderer>().bounds);
-        var b2 = QuickDraw.JoinBounds(TopWall.GetComponent<Renderer>().bounds, BottomWall.GetComponent<Renderer>().bounds);
+
+        var b1 = QuickDraw.JoinBounds(GetBounds(LeftWall), GetBounds(RightWall));
+        var b2 = QuickDraw.JoinBounds(GetBounds(TopWall), GetBounds(BottomWall));
 
         bounds = QuickDraw.JoinBounds(b1, b2);
         bounds = new Bounds(bounds.center, bounds.size * 0.9f);
+    }
+
+    public static Bounds GetBounds(GameObject obj)
+    {
+        if (obj.GetComponent<Renderer>() != null)
+            return obj.GetComponent<Renderer>().bounds;
+
+        Bounds b = new Bounds();
+
+        for (int i = 0; i < obj.transform.childCount; i++)
+        {
+            if(obj.transform.GetChild(i).GetComponent<Renderer>() != null)
+            {
+                b = QuickDraw.JoinBounds(b, obj.transform.GetChild(i).GetComponent<Renderer>().bounds);
+            }
+        }
+
+        return b;
     }
 
     // Update is called once per frame
@@ -100,22 +124,31 @@ public class LevelRoom : MonoBehaviour
         else
         {
 
+
+            if (IsPlayerInside)
+            {
+                LevelGenerator.generator.UpdatePlayerFieldOfView(int.Parse(gameObject.name));
+            }
+
+
             if (transform == LevelGenerator.generator.FirstRoom.transform || roomType == RoomType.Elevator || roomType == RoomType.Store)
             {
+
                 ForceLayout(0, roomType == RoomType.Elevator);
                 return;
             }
-            //else if(LevelGenerator.generator.grid.GetCell(int.Parse(transform.name)).data == 2)
-            //{
-
-            //    return;
-            //}
             else
             {
 
 
                 if (!CanSpawnEnemies)
                     return;
+
+                for (int i = 0; i < Coins.Count; i++)
+                {
+                    if (Coins[i] == null)
+                        Coins.RemoveAt(i);
+                }
 
                 if (IsPlayerInside && !wasPlayerHereLastFrame && !HasBeatenRoom && !EnemiesWereSpawned && !isSpawning /*(Enemies == null || Enemies.Count <= 0)*/)
                 {
@@ -125,6 +158,8 @@ public class LevelRoom : MonoBehaviour
                     DynamicAudioManager.instance.state = DynamicAudioManager.State.Fighting;
                     //StartCoroutine(Test());
                 }
+
+
 
                 for (int i = 0; i < Enemies.Count; i++)
                 {
@@ -145,6 +180,12 @@ public class LevelRoom : MonoBehaviour
                 if (IsPlayerInside && wasPlayerHereLastFrame && Enemies.Count <= 0 && EnemiesWereSpawned)
                 {
                     OpenDoors();
+
+                    float CoinSpeed = 30f;
+                    for (int i = 0; i < Coins.Count; i++)
+                    {
+                        Coins[i].transform.position = Vector3.MoveTowards(Coins[i].transform.position, Player.instance.transform.position, CoinSpeed * Time.deltaTime);
+                    }
                     DynamicAudioManager.instance.state = DynamicAudioManager.State.Calm;
         
                     if (!HasGivenReward)
@@ -174,7 +215,7 @@ public class LevelRoom : MonoBehaviour
                             {
                                 if (i >= item.Probability.x && i <= item.Probability.y)
                                 {
-                                    chest = Instantiate(item.obj, chests[x].transform.position, chests[x].transform.rotation);
+                                    chest = Instantiate(item.obj, chests[x].transform.position, chests[x].transform.rotation, transform);
                                 }
                             }
 
@@ -235,7 +276,7 @@ public class LevelRoom : MonoBehaviour
             UpperLevel.ForceLayout(0, false);
         }
 
-        Floor = LevelLayouts[ActiveLayout].transform.Find("Floor").gameObject;
+        //Floor = LevelLayouts[ActiveLayout].transform.Find("Floor").gameObject;
 
         foreach (Transform child in LevelLayouts[i].transform)
         {
@@ -289,7 +330,7 @@ public class LevelRoom : MonoBehaviour
 
             BakeRefelections();
 
-            Floor = LevelLayouts[ActiveLayout].transform.Find("Floor").gameObject;
+            //Floor = LevelLayouts[ActiveLayout].transform.Find("Floor").gameObject;
 
             return;
         }
@@ -301,7 +342,7 @@ public class LevelRoom : MonoBehaviour
 
         ActiveLayout = i;
 
-        Floor = LevelLayouts[ActiveLayout].transform.Find("Floor").gameObject;
+        //Floor = LevelLayouts[ActiveLayout].transform.Find("Floor").gameObject;
         //if (UpperLevel != null && (i != 1 && i != 2))
         //{
         //    UpperLevel.ForceLayout(0);
@@ -338,7 +379,7 @@ public class LevelRoom : MonoBehaviour
             probe.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
             probe.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.ViaScripting;
             probe.renderDynamicObjects = true;
-            probe.size = bounds.size;
+            probe.size = bounds.size * 2.5f;
             probe.resolution = 256;
             probe.boxProjection = true;
             probe.RenderProbe();
@@ -473,7 +514,7 @@ public class LevelRoom : MonoBehaviour
 
         if (SubLevel != null)
         {
-            Floor = LevelLayouts[ActiveLayout].transform.Find("Floor").gameObject;
+            //Floor = LevelLayouts[ActiveLayout].transform.Find("Floor").gameObject;
             Floor.SetActive(false);
             var d = Instantiate(OpenFloor, Floor.transform.position, Floor.transform.rotation, transform);
             d.SetActive(true);

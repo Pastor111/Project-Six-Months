@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
+using MyInputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -91,6 +92,12 @@ public class PlayerMovement : MonoBehaviour
     #region Additive Functions
 
     public Rigidbody GetRigidbody() { return rb; }
+
+    public Vector3 GetGroundPosition()
+    {
+        Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 100f);
+        return hit.point;
+    }
 
     public Vector3 GetMoveDirUnModified()
     {
@@ -338,12 +345,19 @@ public class PlayerMovement : MonoBehaviour
 
     void DoMovement()
     {
+        var k_z = KeyBoardInput.GetAxis(KeyCode.W, KeyCode.S);
+        var k_x = KeyBoardInput.GetAxis(KeyCode.D, KeyCode.A);
 
-        x = Input.GetAxisRaw("Horizontal");
-        z = Input.GetAxisRaw("Vertical");
+        var controller_axis = GamePadInput.GetHorizontalAndVerticalAxis(GamepadNumber.Gamepad01);
+
+        //x = Input.GetAxisRaw("Horizontal");
+        //z = Input.GetAxisRaw("Vertical");
+
+        x = Math.Clamp(k_x + controller_axis.x, -1f, 1.0f);
+        z = Math.Clamp(k_z + controller_axis.y, -1f, 1.0f);
 
 
-        Running = Input.GetKey(KeyCode.LeftShift);
+        Running = Input.GetKey(KeyCode.LeftShift) || GamePadInput.IsControllerButtonHeld(GamePadButton.RB, GamepadNumber.Gamepad01);
 
         if (moveDir.magnitude >= 1)
             moveDir = Vector3.ClampMagnitude(moveDir, 1.0f);
@@ -361,7 +375,7 @@ public class PlayerMovement : MonoBehaviour
 
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) || GamePadInput.IsControllerButtonPressed(GamePadButton.A))
         {
             if (Grounded)
                 jumping = true;
@@ -370,7 +384,7 @@ public class PlayerMovement : MonoBehaviour
 
         }
 
-        if (Input.GetKey(KeyCode.LeftControl) && Grounded)
+        if ((Input.GetKey(KeyCode.LeftControl) || GamePadInput.IsControllerButtonHeld(GamePadButton.B, GamepadNumber.Gamepad01)) && Grounded)
         {
 
             if (!Sliding)

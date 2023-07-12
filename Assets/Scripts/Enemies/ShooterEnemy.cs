@@ -83,7 +83,7 @@ public class ShooterEnemy : EnemyBehaviour
         Life--;
 
         GetComponent<Renderer>().material.color = DamageColor;
-        StartCoroutine(ShowDamage(0.2f));
+        StartCoroutine(ShowDamage(0.2f, GetComponent<Renderer>()));
 
 
         if (Life <= 0)
@@ -104,7 +104,7 @@ public class ShooterEnemy : EnemyBehaviour
         Life -= damage;
 
         GetComponent<Renderer>().material.color = DamageColor;
-        StartCoroutine(ShowDamage(0.2f));
+        StartCoroutine(ShowDamage(0.2f, GetComponent<Renderer>()));
 
 
         if (Life <= 0)
@@ -124,7 +124,7 @@ public class ShooterEnemy : EnemyBehaviour
 
 
         GetComponent<Renderer>().material.color = DamageColor;
-        StartCoroutine(ShowDamage(0.2f));
+        StartCoroutine(ShowDamage(0.2f, GetComponent<Renderer>()));
 
 
     }
@@ -164,9 +164,9 @@ public class ShooterEnemy : EnemyBehaviour
         
     }
 
-    public override IEnumerator ShowDamage(float t)
+    public override IEnumerator ShowDamage(float t, Renderer renderer)
     {
-        return base.ShowDamage(t);
+        return base.ShowDamage(t, renderer);
     }
 
     public override void Die()

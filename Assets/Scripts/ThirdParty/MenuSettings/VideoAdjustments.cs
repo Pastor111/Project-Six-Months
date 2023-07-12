@@ -33,6 +33,8 @@ namespace MainMenuUtils
             else
                 QualitySettings.vSyncCount = 0;
 
+            //Debug.Log("FRAMES GPU : " + QualitySettings.maxQueuedFrames);
+
             Application.targetFrameRate = settings.TargetFPS;
         }
 

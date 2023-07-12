@@ -17,6 +17,7 @@ public class ExplosiveEnemy : EnemyBehaviour
     {
         target = FindObjectOfType<PlayerMovement>().transform;
         startColor = GetComponent<Renderer>().material.color;
+
         countdown = Timer;
     }
 
@@ -63,7 +64,7 @@ public class ExplosiveEnemy : EnemyBehaviour
 
 
         GetComponent<Renderer>().material.color = DamageColor;
-        StartCoroutine(ShowDamage(0.2f));
+        StartCoroutine(ShowDamage(0.2f, GetComponent<Renderer>()));
 
 
     }
@@ -75,7 +76,7 @@ public class ExplosiveEnemy : EnemyBehaviour
         Life--;
 
         GetComponent<Renderer>().material.color = DamageColor;
-        StartCoroutine(ShowDamage(0.2f));
+        StartCoroutine(ShowDamage(0.2f, GetComponent<Renderer>()));
 
 
         if (Life <= 0)
@@ -97,7 +98,7 @@ public class ExplosiveEnemy : EnemyBehaviour
         Life -= damage;
 
         GetComponent<Renderer>().material.color = DamageColor;
-        StartCoroutine(ShowDamage(0.2f));
+        StartCoroutine(ShowDamage(0.2f, GetComponent<Renderer>()));
 
 
         if (Life <= 0)

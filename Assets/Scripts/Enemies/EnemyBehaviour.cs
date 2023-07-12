@@ -68,14 +68,17 @@ public class EnemyBehaviour : MonoBehaviour
         {
             Vector3 pos = transform.position + (Random.insideUnitSphere * 2f);
             pos.y = transform.position.y;
-            Instantiate(Gold, pos, Quaternion.identity);
+            var c = Instantiate(Gold, pos, Quaternion.identity).GetComponent<PickUpItem>();
+            var r = LevelGenerator.generator.GetRoomInFloor(0, LevelGenerator.generator.CurrentPlayerRoom).GetComponent<LevelRoom>();
+
+            r.Coins.Add(c);
         }
     }
 
 
-    public virtual IEnumerator ShowDamage(float t)
+    public virtual IEnumerator ShowDamage(float t, Renderer renderer)
     {
         yield return new WaitForSeconds(t);
-        GetComponent<Renderer>().material.color = startColor;
+        renderer.material.color = startColor;
     }
 }

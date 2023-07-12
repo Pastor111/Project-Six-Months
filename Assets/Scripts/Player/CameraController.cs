@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MyInputSystem;
 
 [System.Serializable]
 public class HeadBobSettings
@@ -148,8 +149,10 @@ public class CameraController : MonoBehaviour
         //float x = Input.x;
         //float y = mov.y;
 
-        float x = Input.GetAxisRaw("Mouse X");
-        float y = Input.GetAxisRaw("Mouse Y");
+        var controller_axis = GamePadInput.GetRightAxis();
+
+        float x = Mathf.Clamp(Input.GetAxisRaw("Mouse X") + controller_axis.x, -1.0f, 1.0f);
+        float y = Mathf.Clamp(Input.GetAxisRaw("Mouse Y") + controller_axis.y, -1.0f, 1.0f);
 
         xRotation -= y * MouseSensitivity * Time.deltaTime;
         yRotation += x * MouseSensitivity * Time.deltaTime;

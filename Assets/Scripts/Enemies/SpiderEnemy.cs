@@ -26,7 +26,7 @@ public class SpiderEnemy : EnemyBehaviour
         Life--;
 
         GetComponent<Renderer>().material.color = DamageColor;
-        StartCoroutine(ShowDamage(0.2f));
+        StartCoroutine(ShowDamage(0.2f, GetComponent<Renderer>()));
 
 
         if (Life <= 0)
@@ -47,7 +47,7 @@ public class SpiderEnemy : EnemyBehaviour
 
 
         GetComponent<Renderer>().material.color = DamageColor;
-        StartCoroutine(ShowDamage(0.2f));
+        StartCoroutine(ShowDamage(0.2f, GetComponent<Renderer>()));
 
 
     }
@@ -60,7 +60,7 @@ public class SpiderEnemy : EnemyBehaviour
         Life -= damage;
 
         GetComponent<Renderer>().material.color = DamageColor;
-        StartCoroutine(ShowDamage(0.2f));
+        StartCoroutine(ShowDamage(0.2f, GetComponent<Renderer>()));
 
 
         if (Life <= 0)

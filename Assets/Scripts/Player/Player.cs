@@ -116,7 +116,7 @@ public class Player : MonoBehaviour
         {
             PressToInteract.SetActive(true);
 
-            if (Input.GetKeyDown(KeyCode.I))
+            if (Input.GetKeyDown(KeyCode.I) || MyInputSystem.GamePadInput.IsControllerButtonPressed(MyInputSystem.GamePadButton.LB))
             {
            
                 intRequest.Interact();
@@ -325,7 +325,7 @@ public class Player : MonoBehaviour
         if (newGold >= m_gold)
             AudioManager.PlaySound2D(GainGold, false, 1, 0, 1, SoundEffectsMixer);
         else
-            AudioManager.PlaySound2D(BuyItem);
+            AudioManager.PlaySound2D(BuyItem, false, 1, 0, 1, SoundEffectsMixer);
 
         m_gold = newGold;
     }

@@ -57,6 +57,6 @@ public class Muzzle : MonoBehaviour
     IEnumerator AwakeTime()
     {
         yield return new WaitForSeconds(.1f);
-        gameObject.SetActive(false);
+        Destroy(gameObject);
     }
 }
