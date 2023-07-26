@@ -63,7 +63,7 @@ public class Bullet : MonoBehaviour
             }
             
 
-            //Debug.Log(hit.transform.name);
+            Debug.Log(hit.transform.name);
             Destroy(gameObject);
         }
 

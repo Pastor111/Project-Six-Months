@@ -16,10 +16,12 @@ public class SlimeEnemy : EnemyBehaviour
     public GameObject MiniVersion;
     public int ReSpawns;
 
+
     public float Height;
     public float GroundLevel = 2f;
 
-    public Color DamageColor;
+    public float PushForce;
+    public Material DamageColor;
     public GameObject DeathParticles;
     public GameObject JumpParticles;
 
@@ -47,7 +49,7 @@ public class SlimeEnemy : EnemyBehaviour
         agent = GetComponent<NavMeshAgent>();
         target = FindObjectOfType<PlayerMovement>().transform;
         rb = GetComponent<Rigidbody>();
-        startColor = renderer.material.color;
+        startColor = renderer.material;
         Jump();
         currentLookPos = transform.position;
     }
@@ -60,14 +62,15 @@ public class SlimeEnemy : EnemyBehaviour
         if(time >= PathUpdateTime)
         {
             time -= PathUpdateTime;
-            Debug.Log(GetNewPath(Player.instance.movement.GetGroundPosition(), out path));
+            GetNewPath(Player.instance.movement.GetGroundPosition(), out path);
+            //Debug.Log();
 
 
         }
 
         if(path != null)
         {
-            Debug.Log(path.corners.Length);
+            //Debug.Log(path.corners.Length);
             for (int i = 0; i < path.corners.Length - 1; i++)
                 Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 1f);
 
@@ -110,7 +113,7 @@ public class SlimeEnemy : EnemyBehaviour
         base.OnBulletCollide(bullet);
         Life--;
 
-        renderer.material.color = DamageColor;
+        renderer.material = DamageColor;
         StartCoroutine(ShowDamage(0.2f, renderer));
 
 
@@ -132,7 +135,7 @@ public class SlimeEnemy : EnemyBehaviour
         base.GetDamage(damage);
 
 
-        renderer.material.color = DamageColor;
+        renderer.material = DamageColor;
         StartCoroutine(ShowDamage(0.2f, renderer));
 
 
@@ -145,7 +148,7 @@ public class SlimeEnemy : EnemyBehaviour
 
         Life -= damage;
 
-        renderer.material.color = DamageColor;
+        renderer.material = DamageColor;
         StartCoroutine(ShowDamage(0.2f, renderer));
 
 
@@ -184,7 +187,51 @@ public class SlimeEnemy : EnemyBehaviour
         if (collision.collider.transform == Player.instance.transform)
         {
             Player.instance.GetDamage(Damage);
-            Player.instance.movement.GetRigidbody().AddForce(-collision.contacts[0].normal * 10000f);
+            var a = -collision.contacts[0].normal.normalized;
+
+            Debug.Log(a);
+
+            if (Mathf.Abs(a.x) >= 0.1f)
+            {
+                if (a.x > 0)
+                    a.x = 1.0f;
+                else
+                    a.x = -1.0f;
+
+            }
+            else
+            {
+                a.x = 0.0f;
+            }
+
+            if (Mathf.Abs(a.y) >= 0.1f)
+            {
+                if (a.y > 0)
+                    a.y = 1.0f;
+                else
+                    a.y = -1.0f;
+
+            }
+            else
+            {
+                a.y = 0.0f;
+            }
+
+            if (Mathf.Abs(a.z) >= 0.1f)
+            {
+                if (a.z > 0)
+                    a.z = 1.0f;
+                else
+                    a.z = -1.0f;
+
+            }
+            else
+            {
+                a.z = 0.0f;
+            }
+
+
+            Player.instance.movement.GetRigidbody().AddForce(a * PushForce);
         }
     }
 

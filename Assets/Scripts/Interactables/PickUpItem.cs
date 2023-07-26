@@ -24,7 +24,7 @@ public class PickUpItem : MonoBehaviour
     void Update()
     {
         transform.Rotate(Rotation * Time.deltaTime);
-        transform.position = new Vector3(transform.position.x, startY + (Mathf.Sin(Time.time) * MovementAmplitude), transform.position.z);
+        //transform.position = new Vector3(transform.position.x, startY + (Mathf.Sin(Time.time) * MovementAmplitude), transform.position.z);
     }
 
     private void OnTriggerEnter(Collider other)

@@ -51,6 +51,7 @@ public class PlayerMovement : MonoBehaviour
     public Transform cameraMovementEffect;
     public float CameraTiltAmount;
     public float TiltSpeed;
+    public GameObject JumpParticles;
     [Space]
     [Space]
     public float InputBufferMaxTime;
@@ -144,7 +145,7 @@ public class PlayerMovement : MonoBehaviour
             OnEnterGround();
         }
 
-        if(!Grounded && !wasGrounded)
+        if(!Grounded && wasGrounded)
         {
             OnExitGround();
         }
@@ -193,11 +194,13 @@ public class PlayerMovement : MonoBehaviour
     void OnEnterGround()
     {
         AudioManager.PlaySound2D(JumpSounds, false, 1, 0, 1, SoundEffectsMixer);
+        Instantiate(JumpParticles, transform.position - new Vector3(0, PlayerHeight, 0), Quaternion.identity);
     }
 
     void OnExitGround()
     {
-        //AudioManager.PlaySound2D(JumpSounds);
+        AudioManager.PlaySound2D(JumpSounds, false, 1, 0, 1, SoundEffectsMixer);
+        Instantiate(JumpParticles, transform.position - new Vector3(0, PlayerHeight, 0), Quaternion.identity);
         //cam.AddExtraOffset(new Vector3(0, JumpingOffset, 0));
     }
 

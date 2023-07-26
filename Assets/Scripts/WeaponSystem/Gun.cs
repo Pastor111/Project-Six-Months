@@ -53,6 +53,11 @@ public class Gun : MonoBehaviour
 
     #region Private
 
+    [HideInInspector]
+    public GameObject currentGunModel;
+
+    [HideInInspector]
+    public bool Blocking;
     private int CurrentMag;
     private int TotalMagLeft;
     private Transform appearPoint;
@@ -63,6 +68,17 @@ public class Gun : MonoBehaviour
 
     float LeftTrigger;
     float RightTrigger;
+
+
+
+    #region Sword
+    bool CanDoCombo = false;
+    public int previousComboIndex;
+    int comboIndex = 0;
+
+    Coroutine SlashAttackIE;
+    Coroutine SlashDelay;
+    #endregion
     #endregion
 
     // Start is called before the first frame update
@@ -89,17 +105,17 @@ public class Gun : MonoBehaviour
 
         aimAssistHit = ApplyAimAssist(GamePadAiAssist);
 
-        if (aimAssistHit.collider != null && currentWeapon.type == Weapon.WeaponType.Melee)
-            QuickDraw.DrawCircle(20, 1, aimAssistHit.collider.transform.position, Color.yellow, 0.1f);
+        //if (aimAssistHit.collider != null && currentWeapon.type == Weapon.WeaponType.Melee)
+        //    QuickDraw.DrawCircle(20, 1, aimAssistHit.collider.transform.position, Color.yellow, 0.1f);
 
         if (currentWeapon.type != Weapon.WeaponType.Melee)
             anim.SetBool("Running", player.Running);
         else
         {
-            if (thrownKnife != null)
-                anim.SetBool("HasKnife", false);
-            else
-                anim.SetBool("HasKnife", true);
+            //if (thrownKnife != null)
+            //    anim.SetBool("HasKnife", false);
+            //else
+            //    anim.SetBool("HasKnife", true);
         }
 
         if ((Input.GetKeyDown(KeyCode.Mouse0) || (RightTrigger <= .5f && GamePadInput.GetRightTrigger() >= .5f)) && currentWeapon.type == Weapon.WeaponType.SemiAuto)
@@ -107,9 +123,19 @@ public class Gun : MonoBehaviour
             TryToShoot();
         }
 
-        if(Input.GetKeyDown(KeyCode.Mouse1) && currentWeapon.type == Weapon.WeaponType.Melee && thrownKnife != null)
+        if(Input.GetKey(KeyCode.Mouse1) && currentWeapon.type == Weapon.WeaponType.Melee)
         {
-            GetBackKnife();
+            //GetBackKnife();
+            Blocking = true;
+        }
+        else
+        {
+            Blocking = false;
+        }
+
+        if(currentWeapon.type == Weapon.WeaponType.Melee)
+        {
+            anim.SetBool("Block", Blocking);
         }
 
 
@@ -235,6 +261,7 @@ public class Gun : MonoBehaviour
             if (gunModels[i].name == currentWeapon.Name)
             {
                 gunModels[i].SetActive(true);
+                currentGunModel = gunModels[i];
 
                 if (currentWeapon.type != Weapon.WeaponType.Melee)
                     appearPoint = gunModels[i].transform.Find("Appear");
@@ -251,15 +278,48 @@ public class Gun : MonoBehaviour
     public void TryToShoot()
     {
 
-        if (currentWeapon.type == Weapon.WeaponType.Melee && currentWeapon.Bullet == null)
-            return;
-        else if(currentWeapon.type == Weapon.WeaponType.Melee && currentWeapon.Bullet != null && CanShoot && mags[CurrentGunIndex].LeftMag > 0)
+        if (CanShoot && currentWeapon.type == Weapon.WeaponType.Melee)
         {
-            StartCoroutine(ThrowKnife(currentWeapon.ShootDELAY));
-            return;
-        }
 
-        if(CurrentMag <= 0)
+            if (previousComboIndex >= 2)
+                previousComboIndex = -1;
+
+
+            Slash(previousComboIndex + 1);
+            GamePadInput.VibrateController(GamepadNumber.Gamepad01, this);
+            return;
+        }//else if (currentWeapon.type == Weapon.WeaponType.Melee)
+        //{
+        //        if (!CanDoCombo)
+        //            if (CanShoot)
+        //                previousComboIndex = -1;
+        //            else
+        //            {
+        //                //Nothing
+        //            }
+        //        else
+        //        {
+        //            CanDoCombo = false;
+        //            if (comboIndex >= 2)
+        //            {
+        //                previousComboIndex = -1;
+        //            }
+        //            //else
+        //            //{
+        //            //    comboIndex++;
+        //            //}
+
+        //        }
+
+        //}
+
+        //else if (currentWeapon.type == Weapon.WeaponType.Melee && currentWeapon.Bullet != null && CanShoot && mags[CurrentGunIndex].LeftMag > 0)
+        //{
+        //    StartCoroutine(ThrowKnife(currentWeapon.ShootDELAY));
+        //    return;
+        //}
+
+        if (CurrentMag <= 0 && currentWeapon.type != Weapon.WeaponType.Melee)
         {
             source.PlayOneShot(EmptyMagSound);
         }
@@ -269,6 +329,84 @@ public class Gun : MonoBehaviour
             Shoot();
             GamePadInput.VibrateController(GamepadNumber.Gamepad01, this);
         }
+
+
+    }
+
+    public void Slash(int i)
+    {
+        anim.SetTrigger($"Attack #{i + 1}");
+        AudioManager.PlaySound2D(currentWeapon.ShootingSound, false, 1f, 0, Random.Range(0.9f, 1.1f), Player.instance.SoundEffectsMixer);
+        CanShoot = false;
+        //if(SlashDelay != null)
+        //StopCoroutine(SlashDelay);
+
+        if (SlashAttackIE != null)
+            StopCoroutine(SlashAttackIE);
+
+        SlashAttackIE = StartCoroutine(SwordAttack());
+        //SlashDelay = StartCoroutine(ShootDelay(currentWeapon.ShootDELAY));
+    }
+
+    IEnumerator SwordAttack()
+    {
+        int i = 0;
+
+        //CanDoCombo = true;
+        CanShoot = false;
+        yield return new WaitForSeconds(currentWeapon.WindUpTime);
+
+        //CanDoCombo = false;
+        List<EnemyBehaviour> a = new List<EnemyBehaviour>();
+
+
+
+
+        EZCameraShake.CameraShaker.Instance.ShakeOnce(currentWeapon.Magnitude, currentWeapon.Rougness, currentWeapon.fadeIn, currentWeapon.fadeout);
+
+        while (i <= currentWeapon.AttackTimesUpdate)
+        {
+
+            var coll = Physics.OverlapSphere(currentGunModel.transform.position, currentWeapon.AttackRadius, maskToHit);
+
+            for (int x = 0; x < coll.Length; x++)
+            {
+                EnemyBehaviour b = coll[x].GetComponent<EnemyBehaviour>();
+
+                var muzzle = Instantiate(Muzzle, b.transform.position, b.transform.rotation).GetComponent<Muzzle>();
+
+                muzzle.MinSize = 10f;
+                muzzle.MaxSize = 50f;
+
+                muzzle.Restart();
+
+                if (!a.Contains(b))
+                {
+                    a.Add(b);
+                    b.GetDamage(2);
+                }
+ 
+            }
+
+            i++;
+
+            //yield return new WaitForSeconds(currentWeapon.AttackTime / currentWeapon.AttackTimesUpdate);
+ 
+        }
+
+        if (previousComboIndex <= 1)
+            previousComboIndex++;
+        else
+            previousComboIndex = -1;
+
+
+        if (a.Count > 0)
+        {
+            Time.timeScale = 0.0f;
+            yield return new WaitForSecondsRealtime(currentWeapon.SlowMoTime);
+            Time.timeScale = 1.0f;
+        }
+        CanShoot = true;
 
 
     }
@@ -286,7 +424,8 @@ public class Gun : MonoBehaviour
         var muzzle = Instantiate(Muzzle, appearPoint.position, appearPoint.rotation).GetComponent<Muzzle>();
 
         bullet.Owner = gameObject;
-        source.PlayOneShot(currentWeapon.ShootingSound);
+        //source.PlayOneShot(currentWeapon.ShootingSound);
+        AudioManager.PlaySound2D(currentWeapon.ShootingSound, false, 1f, 0, Random.Range(0.9f, 1.1f), Player.instance.SoundEffectsMixer);
 
         EZCameraShake.CameraShaker.Instance.ShakeOnce(currentWeapon.Magnitude, currentWeapon.Rougness, currentWeapon.fadeIn, currentWeapon.fadeout);
 
@@ -347,6 +486,8 @@ public class Gun : MonoBehaviour
         GamePadInput.VibrateController(GamepadNumber.Gamepad01, this, 0.4f, 0.4f);
         StartCoroutine(WaitReload(currentWeapon.ReloadTime));
     }
+
+ 
 
     public void ShowHitMarker(Color col)
     {
@@ -513,5 +654,10 @@ public class Gun : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.DrawRay(ray.origin, ray.direction * 100);
+
+        if(currentWeapon.type == Weapon.WeaponType.Melee && Application.isPlaying)
+        {
+            Gizmos.DrawWireSphere(currentGunModel.transform.position, currentWeapon.AttackRadius);
+        }
     }
 }

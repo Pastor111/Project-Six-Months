@@ -143,13 +143,13 @@ namespace MainMenuUtils
             UnityGraphicsBullshit.SoftShadowsEnabled = GC.SoftShadows;
 
             if (GC.textureQuality == TextureQuality.EightRes)
-                UnityEngine.QualitySettings.masterTextureLimit = 3;
+                UnityEngine.QualitySettings.globalTextureMipmapLimit = 3;
             if (GC.textureQuality == TextureQuality.QuaterRes)
-                UnityEngine.QualitySettings.masterTextureLimit = 2;
+                UnityEngine.QualitySettings.globalTextureMipmapLimit = 2;
             if (GC.textureQuality == TextureQuality.HalfRes)
-                UnityEngine.QualitySettings.masterTextureLimit = 1;
+                UnityEngine.QualitySettings.globalTextureMipmapLimit = 1;
             if (GC.textureQuality == TextureQuality.FullRes)
-                UnityEngine.QualitySettings.masterTextureLimit = 0;
+                UnityEngine.QualitySettings.globalTextureMipmapLimit = 0;
 
             for (int i = 0; i < volumes.Length; i++)
             {

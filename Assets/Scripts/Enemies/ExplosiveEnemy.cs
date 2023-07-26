@@ -16,7 +16,7 @@ public class ExplosiveEnemy : EnemyBehaviour
     void Start()
     {
         target = FindObjectOfType<PlayerMovement>().transform;
-        startColor = GetComponent<Renderer>().material.color;
+        startColor = GetComponent<Renderer>().material;
 
         countdown = Timer;
     }

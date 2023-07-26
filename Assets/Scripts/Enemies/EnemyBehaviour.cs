@@ -12,12 +12,13 @@ public class EnemyBehaviour : MonoBehaviour
 
     protected Transform target;
 
+
     public GameObject Gold;
 
     public Vector2 GoldGive;
 
 
-    protected Color startColor;
+    protected Material startColor;
 
     public AudioMixer SoundEffectsMixer;
 
@@ -79,6 +80,6 @@ public class EnemyBehaviour : MonoBehaviour
     public virtual IEnumerator ShowDamage(float t, Renderer renderer)
     {
         yield return new WaitForSeconds(t);
-        renderer.material.color = startColor;
+        renderer.material = startColor;
     }
 }

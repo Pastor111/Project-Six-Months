@@ -5,7 +5,7 @@ using UnityEngine;
 public class SkeletonEnemy : EnemyBehaviour
 {
     public Animator anim;
-    public Color DamageColor;
+    public Material DamageMaterial;
     public GameObject DeathParticles;
     public float DeathForce;
     public Renderer renderer;
@@ -28,7 +28,7 @@ public class SkeletonEnemy : EnemyBehaviour
     void Start()
     {
         target = FindObjectOfType<PlayerMovement>().transform;
-        startColor = renderer.material.color;
+        startColor = renderer.material;
     }
 
     // Update is called once per frame
@@ -42,6 +42,7 @@ public class SkeletonEnemy : EnemyBehaviour
         else
         {
             agent.isStopped = true;
+            transform.LookAt(target.position);
         }
 
         anim.SetBool("Walking", !agent.isStopped);
@@ -67,7 +68,7 @@ public class SkeletonEnemy : EnemyBehaviour
         base.OnBulletCollide(bullet);
         Life--;
 
-        renderer.material.color = DamageColor;
+        renderer.material = DamageMaterial;
         StartCoroutine(ShowDamage(0.2f, renderer));
 
 
@@ -88,7 +89,7 @@ public class SkeletonEnemy : EnemyBehaviour
         base.GetDamage(damage);
 
 
-        renderer.material.color = DamageColor;
+        renderer.material = DamageMaterial;
         StartCoroutine(ShowDamage(0.2f, renderer));
 
 
@@ -134,7 +135,7 @@ public class SkeletonEnemy : EnemyBehaviour
 
         Life -= damage;
 
-        renderer.material.color = DamageColor;
+        renderer.material = DamageMaterial;
         StartCoroutine(ShowDamage(0.2f, renderer));
 
 
@@ -185,6 +186,11 @@ public class SkeletonEnemy : EnemyBehaviour
         if (collision.collider.transform == Player.instance.transform)
         {
             //Player.instance.GetDamage();
+        }
+
+        if(collision.collider.GetComponent<SlimeEnemy>() != null)
+        {
+            GetDamage(1000);
         }
     }
 }

@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3999564063596523648}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Bone.001
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -42,7 +42,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6085216829381864486}
   - component: {fileID: 8350220719098733953}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Plane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -128,7 +128,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2587075214322201756}
   - component: {fileID: 7263256522242133388}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -219,7 +219,7 @@ GameObject:
   - component: {fileID: 1160869721068734263}
   - component: {fileID: 1160869721068734256}
   - component: {fileID: 1160869721068734262}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Slime-Big
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -325,7 +325,8 @@ MonoBehaviour:
   ReSpawns: 2
   Height: 0.7
   GroundLevel: 2
-  DamageColor: {r: 1, g: 1, b: 1, a: 1}
+  PushForce: 5000
+  DamageColor: {fileID: 2100000, guid: 364135bc7b4fa8a49b11c41e481e0bf0, type: 2}
   DeathParticles: {fileID: 4392877583482758637, guid: 42cb898f80547654b93291564984ce96,
     type: 3}
   JumpParticles: {fileID: 3332424043653957406, guid: 01693d49a4bb7ce4bbdf368498c7de1d,
@@ -363,7 +364,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7087129039513052105}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Bone.001_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -394,7 +395,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5422934498660031499}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Bone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -427,7 +428,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6244579535006179299}
   - component: {fileID: 1160869719569759343}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Armature.001
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -480,7 +481,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4901358761780319740}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Bone_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -511,7 +512,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7720947618694741863}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Armature
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -543,7 +544,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4319086720914905898}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Bone
   m_TagString: Untagged
   m_Icon: {fileID: 0}

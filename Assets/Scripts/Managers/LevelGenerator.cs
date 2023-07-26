@@ -774,10 +774,14 @@ public class LevelGenerator : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+#if !UNITY_EDITOR_WIN
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             GetLevel();
         }
+
+#endif
 
 
 
@@ -822,6 +826,7 @@ public class LevelGenerator : MonoBehaviour
         //    }
         //}
 
+#if !UNITY_EDITOR_WIN
 
         var game = FindObjectOfType<GameSettings>();
 
@@ -841,6 +846,8 @@ public class LevelGenerator : MonoBehaviour
         {
             MinMaxEnemyNumber = new Vector2(2, 7);
         }
+
+#endif
 
 #if UNITY_EDITOR
 
@@ -1044,29 +1051,35 @@ public class LevelGenerator : MonoBehaviour
 
     void PlaceSpecialRoom()
     {
-        #region Store
+#region Store
         int floor = Random.Range(0, NumberOfFloors);
 
         bool hasStoreRoom = false;
         while(hasStoreRoom == false)
         {
             int i = Random.Range(0, Floors_Grid[floor].cells.Length);
-
-            if(Floors_Grid[floor].GetCell(i).data != 1)
+       
+            if (Floors_Grid[floor].GetCell(i).data != 1)
             {
                 var r = GetRoomInFloor(floor, i).GetComponent<LevelRoom>();
-                r.roomType = LevelRoom.RoomType.Store;
 
-                Instantiate(Shop, r.GetFreePosition(), Shop.transform.rotation, r.transform);
+                if(FirstRoom != r.gameObject && LastRoom != r.gameObject)
+                {
+                    r.roomType = LevelRoom.RoomType.Store;
 
-                Debug.Log($"Store is in floor {floor} in the room number {i}");
+                    Instantiate(Shop, r.GetFreePosition(), Shop.transform.rotation, r.transform);
 
-                hasStoreRoom = true;
+                    Debug.Log($"Store is in floor {floor} in the room number {i}");
+
+                    hasStoreRoom = true;
+                }
+
+ 
             }
         }
-        #endregion
+#endregion
 
-        #region Elevator
+#region Elevator
         //floor = Random.Range(0, NumberOfFloors);
 
         if(NumberOfFloors > 1)
@@ -1096,7 +1109,7 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        #endregion
+#endregion
 
     }
 
@@ -1125,12 +1138,12 @@ public class LevelGenerator : MonoBehaviour
             r.gameObject.SetActive(false);
         }
 
-        Debug.Log("A");
+        //Debug.Log("A");
         var obj = GetRoomInFloor(0, currentRoom).GetComponent<LevelRoom>();
         obj.gameObject.SetActive(true);
 
 
-        Debug.Log("B");
+        //Debug.Log("B");
         for (int x = 0; x < obj._Paths.Count; x++)
         {
             obj._Paths[x].SetActive(true);
@@ -1152,7 +1165,7 @@ public class LevelGenerator : MonoBehaviour
         if (obj.UpperLevel != null)
             obj.UpperLevel.gameObject.SetActive(true);
 
-        Debug.Log("C");
+        //Debug.Log("C");
 
     }
 

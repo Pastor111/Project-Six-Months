@@ -37,7 +37,7 @@ public class ShooterEnemy : EnemyBehaviour
         Magazine = new WeaponInfo() { LeftMag = gun.Mag, LeftTotal = gun.DefaultMaxMag };
         SetWeapon(gun);
         target = FindObjectOfType<PlayerMovement>().transform;
-        startColor = GetComponent<Renderer>().material.color;
+        startColor = GetComponent<Renderer>().material;
         StartCoroutine(WaitShoot(2));
 
         targetPos = GetNewTargetPos(20f);

@@ -53,6 +53,15 @@ public class Weapon : ScriptableObject
     public float Rougness;
     public float fadeIn;
     public float fadeout;
+    [Space]
+    [Space]
+    [Space]
+    [Header("Melee")]
+    public int AttackTimesUpdate;
+    public float WindUpTime;
+    public float AttackRadius;
+    public float AttackTime;
+    public float SlowMoTime;
 
     public RuntimeAnimatorController animatorController;
 }

@@ -454,8 +454,7 @@ public class LevelRoom : MonoBehaviour
     {
         for (int i = 0; i < Doors.Count; i++)
         {
-            Doors[i].transform.GetChild(0).transform.localPosition = new Vector3(-20.6323f, Doors[i].transform.GetChild(0).transform.localPosition.y, Doors[i].transform.GetChild(0).transform.localPosition.z);
-            Doors[i].transform.GetChild(1).transform.localPosition = new Vector3(28.1962f, Doors[i].transform.GetChild(1).transform.localPosition.y, Doors[i].transform.GetChild(1).transform.localPosition.z);
+            Doors[i].transform.GetComponentInChildren<Animator>().SetBool("Open", true);
         }
     }
 
@@ -463,8 +462,7 @@ public class LevelRoom : MonoBehaviour
     {
         for (int i = 0; i < Doors.Count; i++)
         {
-            Doors[i].transform.GetChild(0).transform.localPosition = new Vector3(-16.6323f, Doors[i].transform.GetChild(0).transform.localPosition.y, Doors[i].transform.GetChild(0).transform.localPosition.z); 
-            Doors[i].transform.GetChild(1).transform.localPosition = new Vector3(24.1962f, Doors[i].transform.GetChild(1).transform.localPosition.y, Doors[i].transform.GetChild(1).transform.localPosition.z); 
+            Doors[i].transform.GetComponentInChildren<Animator>().SetBool("Open", false);
         }
     }
 

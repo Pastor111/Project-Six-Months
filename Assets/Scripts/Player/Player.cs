@@ -68,6 +68,10 @@ public class Player : MonoBehaviour
     [Header("Game Feel")]
     public AudioClip GainGold;
     public AudioClip BuyItem;
+    public AudioClip HealSound;
+    public AudioClip HeartBeatSound;
+    public AnimationCurve HeartBeatVolume;
+    AudioSource BeatSource;
 
     Interactable intRequest;
     DialogueManager dialogue;
@@ -86,6 +90,9 @@ public class Player : MonoBehaviour
         GamePlayUI.SetActive(true);
         GameOverUI.SetActive(false);
         Time.timeScale = 1.0f;
+
+        AudioManager.Init();
+        BeatSource = AudioManager.PlaySound2D(HeartBeatSound, true, 1.0f, 0.0f, 1.0f, SoundEffectsMixer);
     }
 
     // Update is called once per frame
@@ -95,6 +102,15 @@ public class Player : MonoBehaviour
         HealthText.text = $"{Life} | {100}";
 
         Gold = (int)Mathf.MoveTowards(Gold, m_gold, GoldSpeed * Time.deltaTime);
+
+        if (BeatSource != null)
+        {
+            //var x = Life / 50f;
+
+            BeatSource.volume = HeartBeatVolume.Evaluate((float)Life / (float)MaxLife);
+        }
+        //else
+        //    BeatSource.volume = Mathf.MoveTowards(BeatSource.volume, 0.0F, 10 * Time.deltaTime);
 
         GoldText.text = Gold.ToString();
         KeyText.text = Keys.ToString();
@@ -177,6 +193,24 @@ public class Player : MonoBehaviour
 
     public void GetDamage(int damage = 10)
     {
+
+        if (gun.Blocking)
+        {
+            float a = (float)damage / 4f;
+
+            damage = (int)a;
+
+
+            var muzzle = Instantiate(gun.Muzzle, gun.currentGunModel.transform.position, gun.currentGunModel.transform.rotation).GetComponent<Muzzle>();
+            AudioManager.PlaySound2D(gun.currentWeapon.ShootingSound, false, 1.0f, 0, Random.Range(0.9f, 1.1f), SoundEffectsMixer);
+            //muzzle.MinSize = 10f;
+            //muzzle.MaxSize = 50f;
+
+            muzzle.Restart();
+
+
+        }
+
         Life -= damage;
 
         HealthBar2.targetGraphic.color = Color.white;
@@ -196,12 +230,20 @@ public class Player : MonoBehaviour
         }
     }
 
+    IEnumerator FreezeTime(float t, float ts)
+    {
+        Time.timeScale = ts;
+        yield return new WaitForSecondsRealtime(t);
+        Time.timeScale = 1.0f;
+    }
+
     public void AddLife(int l = 10)
     {
         Life += l;
 
         HealthBar2.targetGraphic.color = Color.white;
         StartCoroutine(WaitHealthBar1(HealthDelayUpdate));
+        AudioManager.PlaySound2D(HealSound, false, 1.0f, 0.0f, 1.0f, SoundEffectsMixer);
 
         if (Life >= MaxLife)
         {
