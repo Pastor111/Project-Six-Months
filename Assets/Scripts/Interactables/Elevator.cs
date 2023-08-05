@@ -10,6 +10,8 @@ public class Elevator : MonoBehaviour
     public Vector3 DownPos;
     bool Moving = false;
 
+    Vector3 goPos;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -22,6 +24,8 @@ public class Elevator : MonoBehaviour
         if (Moving)
         {
             button.Active = false;
+            
+            transform.localPosition = Vector3.MoveTowards(transform.localPosition, goPos, Speed * Time.deltaTime);
         }
         else
         {
@@ -45,12 +49,13 @@ public class Elevator : MonoBehaviour
         }
     }
 
-    IEnumerator Move(Vector3 goPos)
+    IEnumerator Move(Vector3 gPos)
     {
-        while(transform.localPosition != goPos)
+        while(transform.localPosition != gPos)
         {
-            Player.instance.transform.parent = transform;
-            transform.localPosition = Vector3.MoveTowards(transform.localPosition, goPos, Speed * Time.deltaTime);
+            goPos = gPos;
+            //Player.instance.transform.parent = transform;
+            //transform.localPosition = Vector3.MoveTowards(transform.localPosition, goPos, Speed * Time.deltaTime);
             Moving = true;
             yield return null;
         }

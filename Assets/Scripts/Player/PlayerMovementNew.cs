@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using MyInputSystem;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovementNew : MonoBehaviour
 {
 
     [Header("Configurations")]
@@ -67,7 +67,7 @@ public class PlayerMovement : MonoBehaviour
     public AudioClip FootStepSounds;
     public AudioMixer SoundEffectsMixer;
 
-    public static PlayerMovement instance;
+    public static PlayerMovementNew instance;
 
     #region Private
 
@@ -113,6 +113,8 @@ public class PlayerMovement : MonoBehaviour
             var coll = Physics.OverlapSphere(transform.position - new Vector3(0, PlayerHeight, 0), GroundDetectRadius, GroundLayer);
             if (coll.Length > 0)
             {
+
+
                 return true;
             }
 
@@ -129,28 +131,29 @@ public class PlayerMovement : MonoBehaviour
 
         instance = this;
 
-        
+
         SetPositionInstant(transform.position);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(!Lock)
+
+        if (!Lock)
             DoMovement();
 
 
-        if(Grounded && !wasGrounded)
+        if (Grounded && !wasGrounded)
         {
             OnEnterGround();
         }
 
-        if(!Grounded && wasGrounded)
+        if (!Grounded && wasGrounded)
         {
             OnExitGround();
         }
 
-        if((x != 0 || z != 0) && Grounded && !Sliding)
+        if ((x != 0 || z != 0) && Grounded && !Sliding)
         {
             cam.HeadBob(walkTime);
             walkTime += Time.deltaTime * cam.headBobSettings.BobSpeed;
@@ -160,11 +163,24 @@ public class PlayerMovement : MonoBehaviour
             //walkTime = 0
         }
 
+        if (Sliding)
+        {
+            //Instantiate(JumpParticles, transform.position, Quaternion.identity);
+        }
+
+
 
         if (transform.position.y >= 20 && lastPos.y < 20)
+        {
+            LevelGenerator.generator.SetPlayerFloor(1);
             MiniMapManager.GetMiniMap().SetMap(1);
+        }
         else
+        {
+            LevelGenerator.generator.SetPlayerFloor(0);
             MiniMapManager.GetMiniMap().SetMap(0);
+        }
+
 
 
         //if (Grounded)
@@ -235,7 +251,7 @@ public class PlayerMovement : MonoBehaviour
         //Counteract sliding and sloppy movement
         CounterMovement(x, z, mag);
 
-  
+
         //moveDir = transform.forward * z + transform.right * x;
 
 
@@ -252,6 +268,9 @@ public class PlayerMovement : MonoBehaviour
 
 
                 //rb.AddForce(moveDir * WalkSpeed * SpeedMultiplier);
+
+
+
                 rb.AddForce(orientation.transform.forward * z * WalkSpeed * Time.deltaTime);
                 rb.AddForce(orientation.transform.right * x * WalkSpeed * Time.deltaTime);
             }
@@ -360,18 +379,19 @@ public class PlayerMovement : MonoBehaviour
         z = Math.Clamp(k_z + controller_axis.y, -1f, 1.0f);
 
 
-        Running = Input.GetKey(KeyCode.LeftShift) || GamePadInput.IsControllerButtonHeld(GamePadButton.RB, GamepadNumber.Gamepad01);
+        //Running = Input.GetKey(KeyCode.LeftShift) || GamePadInput.IsControllerButtonHeld(GamePadButton.RB, GamepadNumber.Gamepad01);
 
         if (moveDir.magnitude >= 1)
             moveDir = Vector3.ClampMagnitude(moveDir, 1.0f);
 
-        if(LastJumpPress != 0.0f)
+        if (LastJumpPress != 0.0f)
         {
             if ((Time.time - LastJumpPress) <= InputBufferMaxTime)
             {
-                if(Grounded)
+                if (Grounded)
                     jumping = true;
-            }else
+            }
+            else
             {
                 LastJumpPress = 0.0f;
             }

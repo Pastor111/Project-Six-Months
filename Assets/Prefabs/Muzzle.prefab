@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3141684644786158790}
   - component: {fileID: 900006084374677516}
   - component: {fileID: 5487733299483670043}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Muzzle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -26,13 +26,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1692661540063832537}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.000000015454312, y: -0.00000001545431, z: -0.7071067, w: 0.7071068}
   m_LocalPosition: {x: 0.297, y: 2.44, z: 2.07}
   m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &3141684644786158790
 MeshFilter:

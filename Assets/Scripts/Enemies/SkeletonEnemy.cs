@@ -27,7 +27,7 @@ public class SkeletonEnemy : EnemyBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        target = FindObjectOfType<PlayerMovement>().transform;
+        target = FindObjectOfType<Player>().transform;
         startColor = renderer.material;
     }
 
@@ -66,7 +66,8 @@ public class SkeletonEnemy : EnemyBehaviour
     public override void OnBulletCollide(Bullet bullet)
     {
         base.OnBulletCollide(bullet);
-        Life--;
+        Life -= bullet.Damage;
+
 
         renderer.material = DamageMaterial;
         StartCoroutine(ShowDamage(0.2f, renderer));

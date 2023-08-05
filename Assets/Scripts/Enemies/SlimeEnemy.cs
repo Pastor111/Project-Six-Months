@@ -47,7 +47,7 @@ public class SlimeEnemy : EnemyBehaviour
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        target = FindObjectOfType<PlayerMovement>().transform;
+        target = FindObjectOfType<Player>().transform;
         rb = GetComponent<Rigidbody>();
         startColor = renderer.material;
         Jump();
@@ -111,7 +111,7 @@ public class SlimeEnemy : EnemyBehaviour
     public override void OnBulletCollide(Bullet bullet)
     {
         base.OnBulletCollide(bullet);
-        Life--;
+        Life -= bullet.Damage;
 
         renderer.material = DamageColor;
         StartCoroutine(ShowDamage(0.2f, renderer));

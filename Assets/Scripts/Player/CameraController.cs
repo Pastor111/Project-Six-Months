@@ -20,7 +20,7 @@ public class CameraController : MonoBehaviour
 {
     [Header("Configurations")]
     public bool Lock;
-    public PlayerMovement player;
+    public PlayerMovementNew player;
 
     public float MouseSensitivity = 100f;
     public float MinRotationClamp;

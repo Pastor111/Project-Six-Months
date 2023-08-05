@@ -21,6 +21,7 @@ MonoBehaviour:
   Enemy_Bullet: {fileID: 0}
   Mag: 0
   DefaultMaxMag: 0
+  Damage: 2
   FireRate: 0
   ReloadTime: 0
   ShootingSound: {fileID: 8300000, guid: 218781d610ad3194685a584ef335012d, type: 3}

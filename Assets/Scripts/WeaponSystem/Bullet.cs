@@ -8,6 +8,8 @@ public class Bullet : MonoBehaviour
     public GameObject explosion;
     [HideInInspector]
     public GameObject Owner;
+    //[HideInInspector]
+    public int Damage;
     Vector3 hitPos;
     Rigidbody rb;
     Vector3 lastPos;
@@ -59,7 +61,7 @@ public class Bullet : MonoBehaviour
             if (hit.collider.GetComponent<Player>())
             {
                 Player player = hit.collider.GetComponent<Player>();
-                player.GetDamage(5);
+                player.GetDamage(Damage);
             }
             
 

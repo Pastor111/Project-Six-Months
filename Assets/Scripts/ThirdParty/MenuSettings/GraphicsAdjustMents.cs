@@ -106,6 +106,9 @@ namespace MainMenuUtils
         // Update is called once per frame
         void Update()
         {
+
+            Application.runInBackground = true;
+
             if (CheckForObjectsEveryFrame)
             {
                 volumes = GameObject.FindObjectsOfType<Volume>();

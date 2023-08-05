@@ -17,6 +17,8 @@ public class Weapon : ScriptableObject
     public int Mag;
     public int DefaultMaxMag;
 
+    public int Damage = 1;
+
 
     public float FireRate;
     public float ReloadTime;

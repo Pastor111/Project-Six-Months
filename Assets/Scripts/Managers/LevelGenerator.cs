@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
+using Unity.AI.Navigation;
 using UnityEngine.SceneManagement;
 
 namespace GridPathFinder
@@ -756,6 +756,9 @@ public class LevelGenerator : MonoBehaviour
     public GameObject LastRoom;
 
     public static LevelGenerator generator;
+
+    [HideInInspector]
+    public int CurrentPlayerFloor;
     // Start is called before the first frame update
     void Start()
     {
@@ -785,8 +788,8 @@ public class LevelGenerator : MonoBehaviour
 
 
 
-        float xPos = PlayerMovement.instance.transform.position.x / (Spacing * SpacingMultiplier);
-        float yPos = PlayerMovement.instance.transform.position.z / (Spacing * SpacingMultiplier);
+        float xPos = PlayerMovementNew.instance.transform.position.x / (Spacing * SpacingMultiplier);
+        float yPos = PlayerMovementNew.instance.transform.position.z / (Spacing * SpacingMultiplier);
 
         xPos -= UIoffset.x;
         yPos -= UIoffset.y;
@@ -858,6 +861,11 @@ public class LevelGenerator : MonoBehaviour
 #endif
 
 
+    }
+
+    public void SetPlayerFloor(int floor)
+    {
+        CurrentPlayerFloor = floor;
     }
 
     public void ReloadLevel()
@@ -965,7 +973,7 @@ public class LevelGenerator : MonoBehaviour
   
             //StartCoroutine(PlacePlayer());
 
-            PlayerMovement.instance.SetPositionInstant(FirstRoom.GetComponent<LevelRoom>().bounds.center);
+            PlayerMovementNew.instance.SetPositionInstant(FirstRoom.GetComponent<LevelRoom>().bounds.center);
 
 
 

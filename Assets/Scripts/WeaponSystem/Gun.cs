@@ -27,7 +27,7 @@ public class Gun : MonoBehaviour
     [HideInInspector]
     public int CurrentGunIndex = 0;
     public Camera MyCamera;
-    public PlayerMovement player;
+    public PlayerMovementNew player;
     public LayerMask maskToHit;
     public float GamePadAiAssist;
     [Space]
@@ -108,15 +108,15 @@ public class Gun : MonoBehaviour
         //if (aimAssistHit.collider != null && currentWeapon.type == Weapon.WeaponType.Melee)
         //    QuickDraw.DrawCircle(20, 1, aimAssistHit.collider.transform.position, Color.yellow, 0.1f);
 
-        if (currentWeapon.type != Weapon.WeaponType.Melee)
-            anim.SetBool("Running", player.Running);
-        else
-        {
-            //if (thrownKnife != null)
-            //    anim.SetBool("HasKnife", false);
-            //else
-            //    anim.SetBool("HasKnife", true);
-        }
+        //if (currentWeapon.type != Weapon.WeaponType.Melee )
+        //    anim.SetBool("Running", player.Running);
+        //else
+        //{
+        //    //if (thrownKnife != null)
+        //    //    anim.SetBool("HasKnife", false);
+        //    //else
+        //    //    anim.SetBool("HasKnife", true);
+        //}
 
         if ((Input.GetKeyDown(KeyCode.Mouse0) || (RightTrigger <= .5f && GamePadInput.GetRightTrigger() >= .5f)) && currentWeapon.type == Weapon.WeaponType.SemiAuto)
         {
@@ -326,7 +326,11 @@ public class Gun : MonoBehaviour
 
         if(CanShoot && mags[CurrentGunIndex].LeftMag > 0 && !player.Running)
         {
-            Shoot();
+            if (currentWeapon.ShootDELAY <= 0)
+                Shoot();
+            else
+                ShootWithDelay(currentWeapon.ShootDELAY);
+
             GamePadInput.VibrateController(GamepadNumber.Gamepad01, this);
         }
 
@@ -418,12 +422,23 @@ public class Gun : MonoBehaviour
         return hit;
     }
 
-    public void Shoot()
+    void ShootWithDelay(float delay)
     {
+        StartCoroutine(DelayedShoot(delay));
+    }
+
+    IEnumerator DelayedShoot(float delay)
+    {
+        anim.SetTrigger("Shoot");
+        CanShoot = false;
+
+        yield return new WaitForSeconds(delay);
+
         var bullet = Instantiate(currentWeapon.Bullet, appearPoint.position, Quaternion.identity).GetComponent<Bullet>();
         var muzzle = Instantiate(Muzzle, appearPoint.position, appearPoint.rotation).GetComponent<Muzzle>();
 
         bullet.Owner = gameObject;
+        bullet.Damage = currentWeapon.Damage;
         //source.PlayOneShot(currentWeapon.ShootingSound);
         AudioManager.PlaySound2D(currentWeapon.ShootingSound, false, 1f, 0, Random.Range(0.9f, 1.1f), Player.instance.SoundEffectsMixer);
 
@@ -432,7 +447,8 @@ public class Gun : MonoBehaviour
         crosshair.Spread += currentWeapon.AddSpread;
         recoil.RecoilFire();
         muzzle.Restart();
-        anim.SetTrigger("Shoot");
+
+
 
         Physics.Raycast(ray, out RaycastHit hit);
 
@@ -443,15 +459,18 @@ public class Gun : MonoBehaviour
                 if (hit.collider == null)
                 {
                     bullet.ShootRb(ray.direction);
+                    bullet.transform.LookAt(ray.GetPoint(100f));
                 }
                 else
                 {
                     bullet.ShootTransform(hit.point);
+                    bullet.transform.LookAt(hit.point);
                 }
             }
             else
             {
                 bullet.ShootTransform(aimAssistHit.point);
+                bullet.transform.LookAt(aimAssistHit.point);
             }
         }
         else
@@ -459,10 +478,76 @@ public class Gun : MonoBehaviour
             if (hit.collider == null)
             {
                 bullet.ShootRb(ray.direction);
+                bullet.transform.LookAt(ray.GetPoint(100f));
             }
             else
             {
                 bullet.ShootTransform(hit.point);
+                bullet.transform.LookAt(hit.point);
+            }
+        }
+
+
+
+        mags[CurrentGunIndex].LeftMag--;
+        CanShoot = false;
+        StartCoroutine(ShootDelay(currentWeapon.FireRate));
+    }
+
+    public void Shoot()
+    {
+     
+        var bullet = Instantiate(currentWeapon.Bullet, appearPoint.position, Quaternion.identity).GetComponent<Bullet>();
+        var muzzle = Instantiate(Muzzle, appearPoint.position, appearPoint.rotation).GetComponent<Muzzle>();
+
+        bullet.Owner = gameObject;
+        bullet.Damage = currentWeapon.Damage;
+
+        //source.PlayOneShot(currentWeapon.ShootingSound);
+        AudioManager.PlaySound2D(currentWeapon.ShootingSound, false, 1f, 0, Random.Range(0.9f, 1.1f), Player.instance.SoundEffectsMixer);
+
+        EZCameraShake.CameraShaker.Instance.ShakeOnce(currentWeapon.Magnitude, currentWeapon.Rougness, currentWeapon.fadeIn, currentWeapon.fadeout);
+
+        crosshair.Spread += currentWeapon.AddSpread;
+        recoil.RecoilFire();
+        muzzle.Restart();
+        anim.SetTrigger("Shoot");
+
+
+        Physics.Raycast(ray, out RaycastHit hit);
+
+        if (GamePadInput.IsAnyControllerConnected)
+        {
+            if (aimAssistHit.collider == null)
+            {
+                if (hit.collider == null)
+                {
+                    bullet.ShootRb(ray.direction);
+                    bullet.transform.LookAt(ray.GetPoint(100f));
+                }
+                else
+                {
+                    bullet.ShootTransform(hit.point);
+                    bullet.transform.LookAt(hit.point);
+                }
+            }
+            else
+            {
+                bullet.ShootTransform(aimAssistHit.point);
+                bullet.transform.LookAt(aimAssistHit.point);
+            }
+        }
+        else
+        {
+            if (hit.collider == null)
+            {
+                bullet.ShootRb(ray.direction);
+                bullet.transform.LookAt(ray.GetPoint(100f));
+            }
+            else
+            {
+                bullet.ShootTransform(hit.point);
+                bullet.transform.LookAt(hit.point);
             }
         }
 

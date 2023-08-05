@@ -49,7 +49,7 @@ public class Player : MonoBehaviour
     [Space]
     [Space]
     [Header("REFENCES")]
-    public PlayerMovement movement;
+    public PlayerMovementNew movement;
     public CameraController cam;
     public Gun gun;
     public static Player instance;

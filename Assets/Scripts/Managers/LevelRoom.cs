@@ -68,7 +68,7 @@ public class LevelRoom : MonoBehaviour
     {
         get
         {
-            return bounds.Contains(PlayerMovement.instance.transform.position);
+            return bounds.Contains(Player.instance.transform.position);
         }
     }
 

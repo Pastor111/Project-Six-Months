@@ -70,7 +70,7 @@ public class EnemyBehaviour : MonoBehaviour
             Vector3 pos = transform.position + (Random.insideUnitSphere * 2f);
             pos.y = transform.position.y;
             var c = Instantiate(Gold, pos, Quaternion.identity).GetComponent<PickUpItem>();
-            var r = LevelGenerator.generator.GetRoomInFloor(0, LevelGenerator.generator.CurrentPlayerRoom).GetComponent<LevelRoom>();
+            var r = LevelGenerator.generator.GetRoomInFloor(LevelGenerator.generator.CurrentPlayerFloor, LevelGenerator.generator.CurrentPlayerRoom).GetComponent<LevelRoom>();
 
             r.Coins.Add(c);
         }

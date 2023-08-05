@@ -22,6 +22,7 @@ public class FlyingEnemy : EnemyBehaviour
     public Transform SpawnPoint;
     public GameObject bullet;
     bool Shooting;
+    public AudioClip ShootingSound;
 
     public float MinWalkTime;
     float WalkTime;
@@ -35,7 +36,7 @@ public class FlyingEnemy : EnemyBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        target = FindObjectOfType<PlayerMovement>().transform;
+        target = FindObjectOfType<Player>().transform;
         startColor = renderer.material;
         agent.transform.parent = null;
         playerPos = target.position;
@@ -79,7 +80,8 @@ public class FlyingEnemy : EnemyBehaviour
     public override void OnBulletCollide(Bullet bullet)
     {
         base.OnBulletCollide(bullet);
-        Life--;
+        Life -= bullet.Damage;
+
 
         renderer.material = DamageMaterial;
         StartCoroutine(ShowDamage(0.2f, renderer));
@@ -132,6 +134,13 @@ public class FlyingEnemy : EnemyBehaviour
     IEnumerator Attack()
     {
         mag = Random.Range(MinBullets, MaxBullets);
+
+        float shootCountDown = 2f;
+
+        while(shootCountDown > 0)
+        {
+            shootCountDown -= Time.deltaTime;
+        }
         
         while(mag > 0)
         {
@@ -142,6 +151,7 @@ public class FlyingEnemy : EnemyBehaviour
 
             bul.Owner = gameObject;
             bul.ShootRb(dir);
+            AudioManager.PlaySound3D(ShootingSound, false, 1.0f, transform.position, 0, 50f, Random.Range(.9f, 1.1f), SoundEffectsMixer);
 
             mag--;
 

@@ -15,7 +15,7 @@ public class ExplosiveEnemy : EnemyBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        target = FindObjectOfType<PlayerMovement>().transform;
+        target = FindObjectOfType<Player>().transform;
         startColor = GetComponent<Renderer>().material;
 
         countdown = Timer;
